@@ -1,3 +1,4 @@
+
 export interface ProblemStatement {
   text: string;
   timestamp: number;
@@ -27,7 +28,9 @@ export enum AppView {
   FRAMEWORK_SELECTION = 'FRAMEWORK_SELECTION',
   WORKSPACE = 'WORKSPACE',
   METHODOLOGY = 'METHODOLOGY',
+  METHODOLOGY_DETAIL = 'METHODOLOGY_DETAIL',
   ABOUT = 'ABOUT',
+  HISTORY = 'HISTORY',
 }
 
 export type NoteColor = 'yellow' | 'blue' | 'green' | 'pink' | 'orange' | 'white';
@@ -55,6 +58,21 @@ export interface SectionTemplate {
     description: string;
     notes: { content: string; color: NoteColor }[];
   };
+}
+
+export interface Viewport {
+  x: number;
+  y: number;
+  scale: number;
+}
+
+export interface SavedSession {
+  id: string;
+  problem: ProblemStatement;
+  framework: Framework;
+  sections: CanvasSection[];
+  viewport?: Viewport;
+  lastModified: number;
 }
 
 export interface User {

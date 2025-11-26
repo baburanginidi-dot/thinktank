@@ -1,52 +1,82 @@
+
 import React, { useState, useEffect } from 'react';
 import { Header } from './components/Header';
 import { Home } from './views/Home';
 import { FrameworkSelection } from './views/FrameworkSelection';
 import { Workspace } from './views/Workspace';
 import { Methodology } from './views/Methodology';
+import { MethodologyDetail } from './views/MethodologyDetail';
 import { About } from './views/About';
+import { History } from './views/History';
 import { Login } from './views/Login';
-import { AppView, Framework, ProblemStatement, CanvasSection, SectionTemplate, NoteColor, User } from './types';
+import { AppView, Framework, ProblemStatement, CanvasSection, SectionTemplate, NoteColor, User, SavedSession, Viewport } from './types';
 import { suggestFrameworks } from './services/geminiService';
 import { ToastContainer, ToastMessage, ToastType } from './components/Toast';
 
 const STORAGE_KEY = 'think_tank_session_v1';
+const HISTORY_KEY = 'think_tank_history_v1';
 const TEMPLATES_KEY = 'think_tank_templates_v1';
 const USER_KEY = 'think_tank_user_v1';
 
-const App: React.FC = () => {
+export const App: React.FC = () => {
   // Auth State
   const [user, setUser] = useState<User | null>(null);
   const [isAuthChecked, setIsAuthChecked] = useState(false);
 
   // App State
-  const [view, setView] = useState<AppView>(AppView.LOGIN);
+  // Default to Methodology (Landing Page) instead of Login
+  const [view, setView] = useState<AppView>(AppView.METHODOLOGY);
+  
+  // Current Session State
+  const [sessionId, setSessionId] = useState<string | null>(null);
   const [problem, setProblem] = useState<ProblemStatement | null>(null);
   const [frameworks, setFrameworks] = useState<Framework[]>([]);
   const [selectedFramework, setSelectedFramework] = useState<Framework | null>(null);
+  const [savedSections, setSavedSections] = useState<CanvasSection[]>([]);
+  const [savedViewport, setSavedViewport] = useState<Viewport | undefined>(undefined);
+  
+  // Global Data
   const [isLoading, setIsLoading] = useState(false);
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
-  const [savedSections, setSavedSections] = useState<CanvasSection[]>([]);
   const [templates, setTemplates] = useState<SectionTemplate[]>([]);
+  const [history, setHistory] = useState<SavedSession[]>([]);
+
+  // Navigation Data
+  const [selectedMethodology, setSelectedMethodology] = useState<Framework | null>(null);
+  const [pendingTemplate, setPendingTemplate] = useState<Framework | null>(null);
 
   // --- Auth & Persistence Logic ---
 
   useEffect(() => {
     // Check Auth
     const storedUser = localStorage.getItem(USER_KEY);
+    
     if (storedUser) {
-      setUser(JSON.parse(storedUser));
-      // If user exists, check for session
+      const parsedUser = JSON.parse(storedUser);
+      setUser(parsedUser);
+      
+      // Load User Data
+      loadUserData();
+
+      // Restore active session if exists
       const savedSession = localStorage.getItem(STORAGE_KEY);
       if (savedSession) {
         try {
           const data = JSON.parse(savedSession);
           if (data.problem && data.framework) {
+             setSessionId(data.sessionId || Math.random().toString(36).substr(2, 9));
              setProblem(data.problem);
              setSelectedFramework(data.framework);
              setSavedSections(data.sections || []);
+             setSavedViewport(data.viewport);
              setFrameworks(data.frameworks || []);
-             setView(data.view || AppView.HOME);
+             
+             // If they were on a protected view, restore it. Otherwise default to Home.
+             if (data.view && [AppView.WORKSPACE, AppView.FRAMEWORK_SELECTION].includes(data.view)) {
+                setView(data.view);
+             } else {
+                setView(AppView.HOME);
+             }
           } else {
             setView(AppView.HOME);
           }
@@ -57,9 +87,26 @@ const App: React.FC = () => {
         setView(AppView.HOME);
       }
     } else {
-      setView(AppView.LOGIN);
+      // GUEST MODE
+      // Ensure we are on a public view. If not, default to Methodology (Landing)
+      if (![AppView.METHODOLOGY, AppView.METHODOLOGY_DETAIL, AppView.ABOUT, AppView.LOGIN].includes(view)) {
+        setView(AppView.METHODOLOGY);
+      }
     }
     setIsAuthChecked(true);
+
+  }, []);
+
+  const loadUserData = () => {
+    // Load History
+    const storedHistory = localStorage.getItem(HISTORY_KEY);
+    if (storedHistory) {
+      try {
+        setHistory(JSON.parse(storedHistory));
+      } catch (e) {
+        console.error("Failed to load history", e);
+      }
+    }
 
     // Load Templates
     const savedTemplates = localStorage.getItem(TEMPLATES_KEY);
@@ -70,13 +117,23 @@ const App: React.FC = () => {
         console.error("Failed to load templates", e);
       }
     }
-  }, []);
+  };
 
   const handleLogin = (newUser: User) => {
     setUser(newUser);
     localStorage.setItem(USER_KEY, JSON.stringify(newUser));
-    setView(AppView.HOME);
+    loadUserData();
+    
     addToast(`Welcome back, ${newUser.name}`, 'success');
+
+    // Handle Pending Actions (e.g., started a template while guest)
+    if (pendingTemplate) {
+      // Small delay to allow state update
+      setTimeout(() => handleStartFromLibrary(pendingTemplate), 100);
+      setPendingTemplate(null);
+    } else {
+      setView(AppView.HOME);
+    }
   };
 
   const handleLogout = () => {
@@ -85,20 +142,59 @@ const App: React.FC = () => {
     setSelectedFramework(null);
     setFrameworks([]);
     setSavedSections([]);
+    setSavedViewport(undefined);
+    setSessionId(null);
     localStorage.removeItem(USER_KEY);
     localStorage.removeItem(STORAGE_KEY);
-    setView(AppView.LOGIN);
+    setView(AppView.METHODOLOGY); // Redirect to public landing
     addToast("Signed out successfully", 'info');
   };
 
+  // Helper to save current state to history array
+  const saveToHistory = (
+    currentId: string, 
+    currentProblem: ProblemStatement, 
+    currentFramework: Framework, 
+    currentSections: CanvasSection[],
+    currentViewport?: Viewport
+  ) => {
+    const sessionEntry: SavedSession = {
+      id: currentId,
+      problem: currentProblem,
+      framework: currentFramework,
+      sections: currentSections,
+      viewport: currentViewport,
+      lastModified: Date.now()
+    };
+
+    setHistory(prev => {
+      const existingIndex = prev.findIndex(s => s.id === currentId);
+      let newHistory;
+      if (existingIndex >= 0) {
+        newHistory = [...prev];
+        newHistory[existingIndex] = sessionEntry;
+      } else {
+        newHistory = [sessionEntry, ...prev];
+      }
+      localStorage.setItem(HISTORY_KEY, JSON.stringify(newHistory));
+      return newHistory;
+    });
+  };
+
   const persistSession = (override?: Partial<any>) => {
-    if (!user) return; // Don't save session if not logged in
+    if (!user) return; 
     
+    // Don't persist if we are on public pages
+    if ([AppView.METHODOLOGY, AppView.METHODOLOGY_DETAIL, AppView.ABOUT].includes(view)) return;
+
+    // Save "Active State"
     const data = {
+      sessionId,
       view: view === AppView.LOGIN ? AppView.HOME : view,
       problem,
       framework: selectedFramework,
       sections: savedSections,
+      viewport: savedViewport,
       frameworks,
       ...override
     };
@@ -115,7 +211,7 @@ const App: React.FC = () => {
     if (user && view !== AppView.LOGIN) {
       persistSession();
     }
-  }, [view, problem, selectedFramework, frameworks, savedSections, user]);
+  }, [view, problem, selectedFramework, frameworks, savedSections, savedViewport, user, sessionId]);
 
   // --- Toast Logic ---
 
@@ -152,25 +248,74 @@ const App: React.FC = () => {
 
   const handleFrameworkSelect = (fw: Framework) => {
     setSelectedFramework(fw);
-    setSavedSections([]); // Clear previous sections if new framework
+    setSavedSections([]); 
+    setSavedViewport(undefined);
+    setSessionId(Math.random().toString(36).substr(2, 9)); // New Session ID
     setView(AppView.WORKSPACE);
   };
 
+  // Triggered from Methodology Detail
   const handleStartFromLibrary = (fw: Framework) => {
+    if (!user) {
+      setPendingTemplate(fw);
+      setView(AppView.LOGIN);
+      addToast("Please sign in to start a workspace", "info");
+      return;
+    }
+
     const placeholderProblem = "General Project";
     
-    setProblem({ text: placeholderProblem, timestamp: Date.now() });
+    const newProblem = { text: placeholderProblem, timestamp: Date.now() };
+    const newSessionId = Math.random().toString(36).substr(2, 9);
+
+    setProblem(newProblem);
     setSelectedFramework(fw);
     setSavedSections([]); 
-    setFrameworks([]); // Clear specific frameworks as we are using library
+    setSavedViewport(undefined);
+    setFrameworks([]); 
+    setSessionId(newSessionId);
     setView(AppView.WORKSPACE);
     
     addToast(`Started new ${fw.name} session`, 'success');
   };
 
-  const handleWorkspaceSave = (sections: CanvasSection[]) => {
+  const handleWorkspaceSave = (sections: CanvasSection[], viewport?: Viewport) => {
     setSavedSections(sections);
-    // Persistence happens in useEffect
+    if (viewport) {
+      setSavedViewport(viewport);
+    }
+    
+    // Auto-save to History
+    if (sessionId && problem && selectedFramework) {
+      saveToHistory(sessionId, problem, selectedFramework, sections, viewport);
+    }
+  };
+
+  // History Handlers
+  const handleOpenSession = (session: SavedSession) => {
+    setSessionId(session.id);
+    setProblem(session.problem);
+    setSelectedFramework(session.framework);
+    setSavedSections(session.sections);
+    setSavedViewport(session.viewport);
+    setFrameworks([]); // Clear suggestions as we are loading a defined state
+    setView(AppView.WORKSPACE);
+    addToast("Session loaded", 'success');
+  };
+
+  const handleDeleteSession = (id: string) => {
+    setHistory(prev => {
+      const updated = prev.filter(s => s.id !== id);
+      localStorage.setItem(HISTORY_KEY, JSON.stringify(updated));
+      return updated;
+    });
+    
+    // If deleted session is current active one, reset?
+    if (sessionId === id) {
+       handleHomeClick();
+    }
+    
+    addToast("Session deleted", 'info');
   };
 
   const handleSaveTemplate = (section: CanvasSection, name: string) => {
@@ -196,18 +341,24 @@ const App: React.FC = () => {
   };
 
   const handleHomeClick = () => {
-    if (problem && window.confirm("Starting over will clear your current session. Are you sure?")) {
-      localStorage.removeItem(STORAGE_KEY);
-      setProblem(null);
-      setFrameworks([]);
-      setSelectedFramework(null);
-      setSavedSections([]);
+    if (user) {
+      setView(AppView.HOME);
+    } else {
+      setView(AppView.METHODOLOGY);
     }
-    setView(AppView.HOME);
   };
   
   const handleMethodologyClick = () => {
     setView(AppView.METHODOLOGY);
+  };
+  
+  const handleMethodologyDetail = (fw: Framework) => {
+    setSelectedMethodology(fw);
+    setView(AppView.METHODOLOGY_DETAIL);
+  };
+
+  const handleHistoryClick = () => {
+    setView(AppView.HISTORY);
   };
 
   const handleAboutClick = () => {
@@ -218,28 +369,41 @@ const App: React.FC = () => {
     if (view === AppView.FRAMEWORK_SELECTION) {
       setView(AppView.HOME);
     } else if (view === AppView.METHODOLOGY) {
-      setView(AppView.HOME);
+      setView(user ? AppView.HOME : AppView.METHODOLOGY);
+    } else if (view === AppView.METHODOLOGY_DETAIL) {
+      setView(AppView.METHODOLOGY);
     } else if (view === AppView.ABOUT) {
+      setView(user ? AppView.HOME : AppView.METHODOLOGY);
+    } else if (view === AppView.HISTORY) {
       setView(AppView.HOME);
     } else if (view === AppView.WORKSPACE) {
-       // If we have a list of frameworks (meaning we came from AI flow), go back there
-       if (frameworks.length > 0) {
-         setView(AppView.FRAMEWORK_SELECTION);
-       } else {
-         // Otherwise we came from Library or Load
-         setView(AppView.METHODOLOGY); 
+       // Save before exiting
+       if (sessionId && problem && selectedFramework) {
+          saveToHistory(sessionId, problem, selectedFramework, savedSections, savedViewport);
        }
+       setView(AppView.HISTORY); 
     }
   };
 
-  if (!isAuthChecked) return null; // Or a loading spinner
+  if (!isAuthChecked) return null; 
 
-  // Render Login View
-  if (view === AppView.LOGIN || !user) {
+  // Explicit Login View
+  if (view === AppView.LOGIN) {
     return (
       <>
         <Login onLogin={handleLogin} />
         <ToastContainer toasts={toasts} removeToast={removeToast} />
+      </>
+    );
+  }
+
+  // Auth Guard: Only block specific protected routes
+  const protectedViews = [AppView.HOME, AppView.WORKSPACE, AppView.FRAMEWORK_SELECTION, AppView.HISTORY];
+  if (!user && protectedViews.includes(view)) {
+    return (
+      <>
+         <Login onLogin={handleLogin} />
+         <ToastContainer toasts={toasts} removeToast={removeToast} />
       </>
     );
   }
@@ -250,8 +414,10 @@ const App: React.FC = () => {
         user={user}
         onHomeClick={handleHomeClick} 
         onMethodologyClick={handleMethodologyClick}
+        onHistoryClick={handleHistoryClick}
         onAboutClick={handleAboutClick}
         onLogout={handleLogout}
+        onLoginClick={() => setView(AppView.LOGIN)}
       />
       
       {view === AppView.HOME && (
@@ -264,14 +430,36 @@ const App: React.FC = () => {
       
       {view === AppView.METHODOLOGY && (
         <Methodology 
-          onSelectFramework={handleStartFromLibrary} 
+          onViewDetails={handleMethodologyDetail}
+          onBack={handleBack}
+          showBackButton={!!user} // Only show 'Back to Home' if logged in
+          onLogin={() => setView(AppView.LOGIN)} // Pass Login Handler
+        />
+      )}
+      
+      {view === AppView.METHODOLOGY_DETAIL && selectedMethodology && (
+        <MethodologyDetail 
+          framework={selectedMethodology}
+          onUseTemplate={handleStartFromLibrary}
+          onBack={handleBack}
+        />
+      )}
+
+      {view === AppView.HISTORY && (
+        <History 
+          sessions={history}
+          onOpenSession={handleOpenSession}
+          onDeleteSession={handleDeleteSession}
           onBack={handleBack}
         />
       )}
       
       {view === AppView.ABOUT && (
         <About 
-          onStart={handleHomeClick} 
+          onStart={() => {
+            if (user) setView(AppView.HOME);
+            else setView(AppView.LOGIN);
+          }} 
           onBack={handleBack}
         />
       )}
@@ -292,6 +480,7 @@ const App: React.FC = () => {
           addToast={addToast}
           onSaveState={handleWorkspaceSave}
           initialSections={savedSections.length > 0 ? savedSections : undefined}
+          initialViewport={savedViewport}
           templates={templates}
           onSaveTemplate={handleSaveTemplate}
           onDeleteTemplate={handleDeleteTemplate}
@@ -303,5 +492,3 @@ const App: React.FC = () => {
     </div>
   );
 };
-
-export default App;

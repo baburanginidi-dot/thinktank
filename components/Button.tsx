@@ -13,10 +13,11 @@ export const Button: React.FC<ButtonProps> = ({
   disabled,
   ...props 
 }) => {
-  const baseStyles = "inline-flex items-center justify-center px-6 py-3 text-sm font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-stone-500";
+  // Added active:scale-[0.98] for tactile feel
+  const baseStyles = "inline-flex items-center justify-center px-6 py-3 text-sm font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-stone-500 active:scale-[0.98]";
   
   const variants = {
-    primary: "bg-ink text-white hover:bg-stone-800 active:bg-stone-900 shadow-sm",
+    primary: "bg-ink text-white hover:bg-stone-800 hover:shadow-lg active:bg-stone-900 shadow-md",
     secondary: "bg-stone-200 text-ink hover:bg-stone-300 active:bg-stone-400",
     outline: "border border-stone-300 bg-transparent text-ink hover:bg-stone-50 active:bg-stone-100",
     ghost: "bg-transparent text-stone-600 hover:text-ink hover:bg-stone-100",

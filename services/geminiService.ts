@@ -73,19 +73,31 @@ export const initializeBoard = async (problem: string, framework: Framework): Pr
   const ai = getAiClient();
 
   const prompt = `
-    Context: The user has a problem: "${problem}".
-    Framework selected: "${framework.name}".
-    Layout Type: "${framework.layout}".
-    Framework Steps: ${framework.steps.join(', ')}.
+    You are an expert facilitator guiding a high-stakes problem-solving session using the "${framework.name}" framework.
 
-    Task: Create a canvas board layout. 
-    For EACH step of the framework, provide:
-    1. A contextual description/question specifically related to the user's problem (not generic).
-    2. 2-3 initial "sticky note" insights or starting points to help the user overcome the blank canvas syndrome.
-    
-    IMPORTANT: 
-    - If layout is 'six_hats', strictly generate 6 sections corresponding to White, Red, Black, Yellow, Green, Blue hats.
-    - If layout is 'matrix_2x2', strictly generate 4 sections.
+    USER PROBLEM CONTEXT:
+    "${problem}"
+
+    TASK:
+    Initialize the workspace board. For every step/section in the framework, generate:
+    1. A specific guiding question that bridges the framework to the user's specific situation.
+    2. 2-3 "Starter Sticky Notes".
+
+    CRITICAL INSTRUCTION FOR NOTES:
+    - Do NOT use generic placeholders like "Add risk here" or "List benefits".
+    - You MUST extract specific details, actors, and conflicts directly from the USER PROBLEM CONTEXT.
+    - Example: If the problem mentions "Sales vs Engineering", the notes must explicitly mention "Sales pressure" or "Engineering risk".
+    - The notes should read like actual specific thoughts or quotes from the stakeholders involved in the problem description.
+    - If the user input is short, extrapolate logical specific scenarios based on the context.
+
+    FRAMEWORK DETAILS:
+    - Layout: ${framework.layout}
+    - Steps: ${framework.steps.join(', ')}
+
+    OUTPUT REQUIREMENTS:
+    - If layout is 'six_hats', generate exactly 6 sections (White, Red, Black, Yellow, Green, Blue).
+    - If layout is 'matrix_2x2', generate exactly 4 sections.
+    - Otherwise, generate sections for the provided steps.
   `;
 
   const boardSchema: Schema = {
@@ -154,13 +166,18 @@ export const generateSectionIdeas = async (
   const ai = getAiClient();
 
   const prompt = `
-    Problem: "${problem}"
+    Role: Expert Consultant.
+    User Problem: "${problem}"
     Framework: "${framework.name}"
     Current Focus Section: "${sectionTitle}"
-    Existing Notes: ${JSON.stringify(currentNotes)}
+    Existing Notes in Section: ${JSON.stringify(currentNotes)}
 
-    Task: Generate 3 NEW, creative, and distinct ideas/insights for this section. 
-    Do not repeat existing notes. Be specific and actionable.
+    Task: Generate 3 NEW, highly specific ideas/insights for this section. 
+    
+    Constraints:
+    1. Do not repeat existing notes.
+    2. Reference specific entities (people, departments, technologies) mentioned in the User Problem.
+    3. Be provocative and actionable.
   `;
 
   const ideasSchema: Schema = {

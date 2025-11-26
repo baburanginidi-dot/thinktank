@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { ArrowRight, Sparkles } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { ArrowRight } from 'lucide-react';
 import { Button } from '../components/Button';
 
 interface HomeProps {
@@ -8,9 +8,54 @@ interface HomeProps {
   initialInput?: string;
 }
 
+const PLACEHOLDER_EXAMPLES = [
+  "Describe your problem... (e.g., 'User retention dropped by 15%')",
+  "Technical: 'How do we migrate a legacy monolith to microservices without downtime?'",
+  "Strategy: 'Should we prioritize Enterprise sales or Product-Led Growth?'",
+  "Team: 'My engineering lead and product manager have conflicting visions.'",
+  "Personal: 'I feel stuck in my career and fear making the wrong move.'",
+  "Product: 'Customers love our free tier but aren't upgrading to paid.'"
+];
+
 export const Home: React.FC<HomeProps> = ({ onSubmit, isLoading, initialInput }) => {
   const [input, setInput] = useState(initialInput || '');
   const [isFocused, setIsFocused] = useState(false);
+
+  // Typewriter Effect State
+  const [placeholder, setPlaceholder] = useState('');
+  const [phraseIndex, setPhraseIndex] = useState(0);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [typingSpeed, setTypingSpeed] = useState(50);
+
+  useEffect(() => {
+    // If user has typed something, stop animating to save resources/distraction
+    if (input.length > 0) return;
+
+    const handleType = () => {
+      const currentPhrase = PLACEHOLDER_EXAMPLES[phraseIndex];
+      
+      if (isDeleting) {
+        setPlaceholder(prev => prev.substring(0, prev.length - 1));
+        setTypingSpeed(30); // Deleting is faster
+      } else {
+        setPlaceholder(currentPhrase.substring(0, placeholder.length + 1));
+        setTypingSpeed(50); // Typing speed
+      }
+
+      // Logic for switching phases
+      if (!isDeleting && placeholder === currentPhrase) {
+        // Finished typing, pause before deleting
+        setTimeout(() => setIsDeleting(true), 2000); 
+      } else if (isDeleting && placeholder === '') {
+        // Finished deleting, move to next phrase
+        setIsDeleting(false);
+        setPhraseIndex((prev) => (prev + 1) % PLACEHOLDER_EXAMPLES.length);
+      }
+    };
+
+    const timer = setTimeout(handleType, typingSpeed);
+    return () => clearTimeout(timer);
+  }, [placeholder, isDeleting, phraseIndex, input]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -49,7 +94,7 @@ export const Home: React.FC<HomeProps> = ({ onSubmit, isLoading, initialInput })
               onChange={(e) => setInput(e.target.value)}
               onFocus={() => setIsFocused(true)}
               onBlur={() => setIsFocused(false)}
-              placeholder="Describe your problem... (e.g., 'User retention dropped by 15%')"
+              placeholder={input.length > 0 ? '' : placeholder}
               className="w-full p-4 md:p-6 text-[16px] md:text-lg bg-transparent text-ink placeholder:text-stone-300 focus:outline-none resize-none min-h-[120px] md:min-h-[140px]"
               disabled={isLoading}
               style={{ fontSize: '16px' }} // Prevents iOS zoom on focus

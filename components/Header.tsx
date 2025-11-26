@@ -1,16 +1,17 @@
 import React from 'react';
-import { BrainCircuit, LogOut, User as UserIcon } from 'lucide-react';
+import { BrainCircuit, LogOut, History, User as UserIcon } from 'lucide-react';
 import { User } from '../types';
 
 interface HeaderProps {
   user: User | null;
   onHomeClick: () => void;
   onMethodologyClick: () => void;
+  onHistoryClick: () => void;
   onAboutClick: () => void;
   onLogout: () => void;
 }
 
-export const Header: React.FC<HeaderProps> = ({ user, onHomeClick, onMethodologyClick, onAboutClick, onLogout }) => {
+export const Header: React.FC<HeaderProps> = ({ user, onHomeClick, onMethodologyClick, onHistoryClick, onAboutClick, onLogout }) => {
   return (
     <header className="w-full py-3 px-4 md:py-4 md:px-8 flex justify-between items-center border-b border-stone-200 bg-paper sticky top-0 z-50">
       <button 
@@ -26,6 +27,12 @@ export const Header: React.FC<HeaderProps> = ({ user, onHomeClick, onMethodology
       {user && (
         <div className="flex items-center gap-4 md:gap-6">
           <nav className="hidden md:flex gap-6 text-sm font-medium text-stone-500">
+            <button 
+              onClick={onHistoryClick}
+              className="hover:text-ink transition-colors focus:outline-none flex items-center gap-1.5"
+            >
+              <History size={16} /> History
+            </button>
             <button 
               onClick={onMethodologyClick}
               className="hover:text-ink transition-colors focus:outline-none"
