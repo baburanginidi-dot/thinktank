@@ -1,19 +1,40 @@
 import React, { useEffect } from 'react';
 import { X, CheckCircle, AlertCircle, Info } from 'lucide-react';
 
+/**
+ * Defines the possible types for a toast notification.
+ * @typedef {'success' | 'error' | 'info'} ToastType
+ */
 export type ToastType = 'success' | 'error' | 'info';
 
+/**
+ * @interface ToastMessage
+ * @property {string} id - A unique identifier for the toast.
+ * @property {string} message - The content of the toast message.
+ * @property {ToastType} type - The type of the toast, which determines its style and icon.
+ */
 export interface ToastMessage {
   id: string;
   message: string;
   type: ToastType;
 }
 
+/**
+ * @interface ToastProps
+ * @property {ToastMessage[]} toasts - An array of toast messages to display.
+ * @property {(id: string) => void} removeToast - Callback function to remove a toast by its ID.
+ */
 interface ToastProps {
   toasts: ToastMessage[];
   removeToast: (id: string) => void;
 }
 
+/**
+ * A container that displays a list of toast notifications.
+ *
+ * @param {ToastProps} props - The props for the ToastContainer component.
+ * @returns {React.ReactElement} The rendered toast container.
+ */
 export const ToastContainer: React.FC<ToastProps> = ({ toasts, removeToast }) => {
   return (
     <div className="fixed bottom-4 right-4 z-[100] flex flex-col gap-2 pointer-events-none">
@@ -24,6 +45,15 @@ export const ToastContainer: React.FC<ToastProps> = ({ toasts, removeToast }) =>
   );
 };
 
+/**
+ * Renders an individual toast notification item.
+ * The toast automatically dismisses after a timeout.
+ *
+ * @param {object} props - The component props.
+ * @param {ToastMessage} props.toast - The toast message object to render.
+ * @param {(id: string) => void} props.onRemove - Callback to remove the toast.
+ * @returns {React.ReactElement} The rendered toast item.
+ */
 const ToastItem: React.FC<{ toast: ToastMessage; onRemove: (id: string) => void }> = ({ toast, onRemove }) => {
   useEffect(() => {
     const timer = setTimeout(() => {

@@ -2,6 +2,15 @@ import React from 'react';
 import { BrainCircuit, LogOut, History, User as UserIcon } from 'lucide-react';
 import { User } from '../types';
 
+/**
+ * @interface HeaderProps
+ * @property {User | null} user - The current user object, or null if not logged in.
+ * @property {() => void} onHomeClick - Callback function for when the home button is clicked.
+ * @property {() => void} onMethodologyClick - Callback function for when the methodology link is clicked.
+ * @property {() => void} onHistoryClick - Callback function for when the history link is clicked.
+ * @property {() => void} onAboutClick - Callback function for when the about link is clicked.
+ * @property {() => void} onLogout - Callback function for when the logout button is clicked.
+ */
 interface HeaderProps {
   user: User | null;
   onHomeClick: () => void;
@@ -11,6 +20,13 @@ interface HeaderProps {
   onLogout: () => void;
 }
 
+/**
+ * Renders the header for the application.
+ * It displays the application title, navigation links, and user information.
+ *
+ * @param {HeaderProps} props - The props for the Header component.
+ * @returns {React.ReactElement} The rendered header component.
+ */
 export const Header: React.FC<HeaderProps> = ({ user, onHomeClick, onMethodologyClick, onHistoryClick, onAboutClick, onLogout }) => {
   return (
     <header className="w-full py-3 px-4 md:py-4 md:px-8 flex justify-between items-center border-b border-stone-200 bg-paper sticky top-0 z-50">

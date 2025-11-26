@@ -2,12 +2,22 @@ import React, { useState, useEffect } from 'react';
 import { ArrowRight } from 'lucide-react';
 import { Button } from '../components/Button';
 
+/**
+ * @interface HomeProps
+ * @property {(problem: string) => void} onSubmit - Callback function when the user submits a problem statement.
+ * @property {boolean} isLoading - Indicates if the application is in a loading state.
+ * @property {string} [initialInput] - An optional initial value for the input textarea.
+ */
 interface HomeProps {
   onSubmit: (problem: string) => void;
   isLoading: boolean;
   initialInput?: string;
 }
 
+/**
+ * An array of example problem statements to be displayed in the textarea placeholder with a typewriter effect.
+ * @type {string[]}
+ */
 const PLACEHOLDER_EXAMPLES = [
   "Describe your problem... (e.g., 'User retention dropped by 15%')",
   "Technical: 'How do we migrate a legacy monolith to microservices without downtime?'",
@@ -17,6 +27,13 @@ const PLACEHOLDER_EXAMPLES = [
   "Product: 'Customers love our free tier but aren't upgrading to paid.'"
 ];
 
+/**
+ * Renders the Home page, which is the main entry point for the user to input their problem.
+ * Features a typewriter effect for placeholder text.
+ *
+ * @param {HomeProps} props - The props for the Home component.
+ * @returns {React.ReactElement} The rendered home page.
+ */
 export const Home: React.FC<HomeProps> = ({ onSubmit, isLoading, initialInput }) => {
   const [input, setInput] = useState(initialInput || '');
   const [isFocused, setIsFocused] = useState(false);

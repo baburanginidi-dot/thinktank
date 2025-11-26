@@ -1,14 +1,26 @@
 import React from 'react';
 
+/**
+ * @interface ButtonProps
+ * @extends React.ButtonHTMLAttributes<HTMLButtonElement>
+ * @property {'primary' | 'secondary' | 'outline' | 'ghost'} [variant='primary'] - The visual style of the button.
+ * @property {boolean} [isLoading=false] - If true, the button will be in a loading state.
+ */
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: 'primary' | 'secondary' | 'outline' | 'ghost';
   isLoading?: boolean;
 }
 
-export const Button: React.FC<ButtonProps> = ({ 
-  children, 
-  variant = 'primary', 
-  className = '', 
+/**
+ * A customizable button component.
+ *
+ * @param {ButtonProps} props - The props for the button component.
+ * @returns {React.FC<ButtonProps>} A button element with various styles and functionalities.
+ */
+export const Button: React.FC<ButtonProps> = ({
+  children,
+  variant = 'primary',
+  className = '',
   isLoading,
   disabled,
   ...props 

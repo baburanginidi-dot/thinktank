@@ -13,11 +13,34 @@ import { AppView, Framework, ProblemStatement, CanvasSection, SectionTemplate, N
 import { suggestFrameworks } from './services/geminiService';
 import { ToastContainer, ToastMessage, ToastType } from './components/Toast';
 
+/**
+ * Local storage key for the active session.
+ * @type {string}
+ */
 const STORAGE_KEY = 'think_tank_session_v1';
+/**
+ * Local storage key for session history.
+ * @type {string}
+ */
 const HISTORY_KEY = 'think_tank_history_v1';
+/**
+ * Local storage key for saved templates.
+ * @type {string}
+ */
 const TEMPLATES_KEY = 'think_tank_templates_v1';
+/**
+ * Local storage key for user data.
+ * @type {string}
+ */
 const USER_KEY = 'think_tank_user_v1';
 
+/**
+ * The main application component.
+ * It manages the application's state, including the current view, user authentication,
+ * session data, and navigation between different views.
+ *
+ * @returns {React.ReactElement} The rendered application.
+ */
 export const App: React.FC = () => {
   // Auth State
   const [user, setUser] = useState<User | null>(null);

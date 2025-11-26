@@ -3,10 +3,22 @@ import { BrainCircuit, ArrowRight, Mail, Lock, User as UserIcon } from 'lucide-r
 import { Button } from '../components/Button';
 import { User } from '../types';
 
+/**
+ * @interface LoginProps
+ * @property {(user: User) => void} onLogin - Callback function to handle the user login event.
+ */
 interface LoginProps {
   onLogin: (user: User) => void;
 }
 
+/**
+ * Renders a login and sign-up form.
+ * The component manages its own state for form data and loading indicators.
+ * It simulates an API call for authentication.
+ *
+ * @param {LoginProps} props - The props for the Login component.
+ * @returns {React.ReactElement} The rendered login/signup view.
+ */
 export const Login: React.FC<LoginProps> = ({ onLogin }) => {
   const [isSignUp, setIsSignUp] = useState(false);
   const [isLoading, setIsLoading] = useState(false);

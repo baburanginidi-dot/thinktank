@@ -3,6 +3,13 @@ import { SavedSession } from '../types';
 import { ArrowLeft, Trash2, Clock, ArrowRight, Layout, Calendar } from 'lucide-react';
 import { Button } from '../components/Button';
 
+/**
+ * @interface HistoryProps
+ * @property {SavedSession[]} sessions - An array of saved sessions.
+ * @property {(session: SavedSession) => void} onOpenSession - Callback to open a saved session.
+ * @property {(sessionId: string) => void} onDeleteSession - Callback to delete a session.
+ * @property {() => void} onBack - Callback to navigate back to the previous view.
+ */
 interface HistoryProps {
   sessions: SavedSession[];
   onOpenSession: (session: SavedSession) => void;
@@ -10,9 +17,21 @@ interface HistoryProps {
   onBack: () => void;
 }
 
+/**
+ * Renders the session history page, displaying a list of saved sessions.
+ * Allows users to resume or delete past sessions.
+ *
+ * @param {HistoryProps} props - The props for the History component.
+ * @returns {React.ReactElement} The rendered history page.
+ */
 export const History: React.FC<HistoryProps> = ({ sessions, onOpenSession, onDeleteSession, onBack }) => {
   const sortedSessions = [...sessions].sort((a, b) => b.lastModified - a.lastModified);
 
+  /**
+   * Formats a Unix timestamp into a readable date string.
+   * @param {number} timestamp - The timestamp to format.
+   * @returns {string} The formatted date string.
+   */
   const formatDate = (timestamp: number) => {
     return new Date(timestamp).toLocaleDateString('en-US', {
       month: 'short',
