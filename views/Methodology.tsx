@@ -5,6 +5,13 @@ import { Framework } from '../types';
 import { ArrowRight, Search, Cpu, Brain, Layers, Target, Grid2X2, Grid3X3, Trello, ArrowLeft, Sparkles, Lock } from 'lucide-react';
 import { Button } from '../components/Button';
 
+/**
+ * @interface MethodologyProps
+ * @property {(framework: Framework) => void} onViewDetails - Callback to view the details of a framework.
+ * @property {() => void} onBack - Callback to navigate back.
+ * @property {boolean} [showBackButton=true] - Whether to show the back button.
+ * @property {() => void} [onLogin] - Optional callback to handle login actions.
+ */
 interface MethodologyProps {
   onViewDetails: (framework: Framework) => void;
   onBack: () => void;
@@ -12,6 +19,13 @@ interface MethodologyProps {
   onLogin?: () => void;
 }
 
+/**
+ * Renders the Methodology library page, displaying a browsable and searchable list of frameworks.
+ * This component can also serve as a landing page for guest users.
+ *
+ * @param {MethodologyProps} props - The props for the Methodology component.
+ * @returns {React.ReactElement} The rendered methodology library page.
+ */
 export const Methodology: React.FC<MethodologyProps> = ({ onViewDetails, onBack, showBackButton = true, onLogin }) => {
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
   const [searchQuery, setSearchQuery] = useState('');

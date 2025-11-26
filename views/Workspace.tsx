@@ -5,6 +5,19 @@ import { StickyNote } from '../components/StickyNote';
 import { Plus, Sparkles, ZoomIn, ZoomOut, Layout, Move, Download, Save, Bookmark, Trash2, GripVertical, ArrowLeft, MousePointer2 } from 'lucide-react';
 import { Spinner } from '../components/Spinner';
 
+/**
+ * @interface WorkspaceProps
+ * @property {ProblemStatement} problem - The user's problem statement.
+ * @property {Framework} framework - The selected framework for the workspace.
+ * @property {(msg: string, type: 'success' | 'error' | 'info') => void} addToast - Function to display toast notifications.
+ * @property {(sections: CanvasSection[], viewport?: Viewport) => void} onSaveState - Callback to save the current state of the workspace.
+ * @property {CanvasSection[]} [initialSections] - Optional initial sections to load into the workspace.
+ * @property {Viewport} [initialViewport] - Optional initial viewport settings.
+ * @property {SectionTemplate[]} templates - An array of saved section templates.
+ * @property {(section: CanvasSection, name: string) => void} onSaveTemplate - Callback to save a section as a template.
+ * @property {(id: string) => void} onDeleteTemplate - Callback to delete a saved template.
+ * @property {() => void} onBack - Callback to navigate back.
+ */
 interface WorkspaceProps {
   problem: ProblemStatement;
   framework: Framework;
@@ -18,13 +31,28 @@ interface WorkspaceProps {
   onBack: () => void;
 }
 
+/**
+ * @interface Transform
+ * Represents the transformation state of the canvas viewport.
+ * @property {number} x - The x-coordinate of the viewport origin.
+ * @property {number} y - The y-coordinate of the viewport origin.
+ * @property {number} scale - The zoom level of the viewport.
+ */
 interface Transform {
   x: number;
   y: number;
   scale: number;
 }
 
-// Configuration for specific layouts
+/**
+ * Returns a style object for a section based on the framework layout and its index.
+ * This is used to apply specific colors and styles for layouts like "Six Thinking Hats".
+ *
+ * @param {string} frameworkLayout - The layout of the framework (e.g., 'six_hats', 'matrix_2x2').
+ * @param {number} index - The index of the section.
+ * @param {string} title - The title of the section.
+ * @returns {object} An object containing CSS class names for styling.
+ */
 const getSectionStyle = (frameworkLayout: string, index: number, title: string) => {
   const titleLower = title.toLowerCase();
   
@@ -63,7 +91,15 @@ const getSectionStyle = (frameworkLayout: string, index: number, title: string) 
   return { borderColor: 'border-stone-200', headerBg: 'bg-white/90', titleColor: 'text-ink', badge: 'bg-stone-100 text-stone-600' };
 };
 
-export const Workspace: React.FC<WorkspaceProps> = ({ 
+/**
+ * The main interactive component for the collaborative workspace.
+ * It manages the canvas, sections, notes, and all user interactions including zooming, panning, and editing.
+ * It also handles AI-powered features like board initialization and idea generation.
+ *
+ * @param {WorkspaceProps} props - The props for the Workspace component.
+ * @returns {React.ReactElement} The rendered workspace.
+ */
+export const Workspace: React.FC<WorkspaceProps> = ({
   problem, 
   framework, 
   addToast, 
