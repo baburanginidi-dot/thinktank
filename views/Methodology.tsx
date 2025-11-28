@@ -5,13 +5,28 @@ import { Framework } from '../types';
 import { ArrowRight, Search, Cpu, Brain, Layers, Target, Grid2X2, Grid3X3, Trello, ArrowLeft, Sparkles, Lock } from 'lucide-react';
 import { Button } from '../components/Button';
 
+/**
+ * Props for the Methodology view.
+ */
 interface MethodologyProps {
+  /** Callback to view details of a specific framework. */
   onViewDetails: (framework: Framework) => void;
+  /** Callback to go back to the previous view. */
   onBack: () => void;
+  /** Whether to show the back button. Defaults to true. */
   showBackButton?: boolean;
+  /** Optional callback for login (used in guest mode). */
   onLogin?: () => void;
 }
 
+/**
+ * The Methodology Library view.
+ * Displays a catalog of all available problem-solving frameworks.
+ * Can be accessed by guests (landing page) or authenticated users.
+ *
+ * @param {MethodologyProps} props - The props for the view.
+ * @returns {JSX.Element} The rendered Methodology view.
+ */
 export const Methodology: React.FC<MethodologyProps> = ({ onViewDetails, onBack, showBackButton = true, onLogin }) => {
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
   const [searchQuery, setSearchQuery] = useState('');

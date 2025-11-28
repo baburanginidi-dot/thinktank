@@ -1,5 +1,9 @@
 import { Framework } from "../types";
 
+/**
+ * A curated library of predefined frameworks available in the application.
+ * These frameworks cover Strategic, Mental Model, Product, and Technical categories.
+ */
 export const LIBRARY_FRAMEWORKS: Framework[] = [
   // --- Strategic ---
   {

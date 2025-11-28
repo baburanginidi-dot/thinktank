@@ -4,17 +4,35 @@ import { BrainCircuit, LogOut, History, User as UserIcon, Shield } from 'lucide-
 import { User } from '../types';
 import { Button } from './Button';
 
+/**
+ * Props for the Header component.
+ */
 interface HeaderProps {
+  /** The currently logged-in user, or null if no user is logged in. */
   user: User | null;
+  /** Callback for when the home/logo is clicked. */
   onHomeClick: () => void;
+  /** Callback for when the Methodology link is clicked. */
   onMethodologyClick: () => void;
+  /** Callback for when the History link is clicked. */
   onHistoryClick: () => void;
+  /** Callback for when the About link is clicked. */
   onAboutClick: () => void;
+  /** Callback for when the user logs out. */
   onLogout: () => void;
+  /** Callback for when the user clicks the login button. */
   onLoginClick: () => void;
+  /** Optional callback for when the Admin dashboard link is clicked. */
   onAdminClick?: () => void;
 }
 
+/**
+ * The main application header component.
+ * Displays navigation links and user profile/actions based on authentication state.
+ *
+ * @param {HeaderProps} props - The props for the header.
+ * @returns {JSX.Element} The rendered header element.
+ */
 export const Header: React.FC<HeaderProps> = ({ 
   user, 
   onHomeClick, 
@@ -32,7 +50,7 @@ export const Header: React.FC<HeaderProps> = ({
         className="flex items-center gap-2 md:gap-3 group focus:outline-none"
       >
         <div className="bg-ink text-white p-1.5 md:p-2 rounded-md group-hover:bg-stone-800 transition-colors">
-          <BrainCircuit size={20} md:size={24} strokeWidth={1.5} />
+          <BrainCircuit size={24} strokeWidth={1.5} className="w-5 h-5 md:w-6 md:h-6" />
         </div>
         <span className="text-lg md:text-xl font-serif font-semibold tracking-tight text-ink">Think Tank.</span>
       </button>
@@ -89,7 +107,7 @@ export const Header: React.FC<HeaderProps> = ({
               className="p-1.5 md:p-2 text-stone-400 hover:text-red-500 hover:bg-stone-100 rounded-full transition-colors"
               title="Sign Out"
             >
-              <LogOut size={16} md:size={18} />
+              <LogOut size={16} className="w-4 h-4 md:w-[18px] md:h-[18px]" />
             </button>
           </div>
         ) : (

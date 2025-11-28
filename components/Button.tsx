@@ -1,10 +1,21 @@
 import React from 'react';
 
+/**
+ * Props for the Button component.
+ */
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+  /** The visual variant of the button. Defaults to 'primary'. */
   variant?: 'primary' | 'secondary' | 'outline' | 'ghost';
+  /** Indicates if the button is in a loading state. */
   isLoading?: boolean;
 }
 
+/**
+ * A reusable button component with support for different variants and loading states.
+ *
+ * @param {ButtonProps} props - The props for the button.
+ * @returns {JSX.Element} The rendered button element.
+ */
 export const Button: React.FC<ButtonProps> = ({ 
   children, 
   variant = 'primary', 

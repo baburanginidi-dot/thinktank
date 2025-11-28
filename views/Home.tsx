@@ -2,12 +2,21 @@ import React, { useState, useEffect } from 'react';
 import { ArrowRight } from 'lucide-react';
 import { Button } from '../components/Button';
 
+/**
+ * Props for the Home view.
+ */
 interface HomeProps {
+  /** Callback to submit the problem statement. */
   onSubmit: (problem: string) => void;
+  /** Indicates if the submission is being processed. */
   isLoading: boolean;
+  /** Optional initial value for the input field. */
   initialInput?: string;
 }
 
+/**
+ * Examples to display in the typewriter effect placeholder.
+ */
 const PLACEHOLDER_EXAMPLES = [
   "Describe your problem... (e.g., 'User retention dropped by 15%')",
   "Technical: 'How do we migrate a legacy monolith to microservices without downtime?'",
@@ -17,6 +26,14 @@ const PLACEHOLDER_EXAMPLES = [
   "Product: 'Customers love our free tier but aren't upgrading to paid.'"
 ];
 
+/**
+ * The Home view component.
+ * Acts as the main landing page where users enter their problem statement.
+ * Features a typewriter effect for the placeholder text.
+ *
+ * @param {HomeProps} props - The props for the view.
+ * @returns {JSX.Element} The rendered Home view.
+ */
 export const Home: React.FC<HomeProps> = ({ onSubmit, isLoading, initialInput }) => {
   const [input, setInput] = useState(initialInput || '');
   const [isFocused, setIsFocused] = useState(false);

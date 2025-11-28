@@ -5,26 +5,50 @@ import { StickyNote } from '../components/StickyNote';
 import { Plus, Sparkles, ZoomIn, ZoomOut, Layout, Move, Download, Save, Bookmark, Trash2, GripVertical, ArrowLeft, MousePointer2 } from 'lucide-react';
 import { Spinner } from '../components/Spinner';
 
+/**
+ * Props for the Workspace component.
+ */
 interface WorkspaceProps {
+  /** The problem statement being solved. */
   problem: ProblemStatement;
+  /** The framework selected for the session. */
   framework: Framework;
+  /** Callback to display toast notifications. */
   addToast: (msg: string, type: 'success' | 'error' | 'info') => void;
+  /** Callback to save the current state of the workspace. */
   onSaveState: (sections: CanvasSection[], viewport?: Viewport) => void;
+  /** Optional initial sections to load. */
   initialSections?: CanvasSection[];
+  /** Optional initial viewport state. */
   initialViewport?: Viewport;
+  /** List of available section templates. */
   templates: SectionTemplate[];
+  /** Callback to save a section as a template. */
   onSaveTemplate: (section: CanvasSection, name: string) => void;
+  /** Callback to delete a template. */
   onDeleteTemplate: (id: string) => void;
+  /** Callback to exit the workspace. */
   onBack: () => void;
 }
 
+/**
+ * Interface for viewport transformation state.
+ */
 interface Transform {
   x: number;
   y: number;
   scale: number;
 }
 
-// Configuration for specific layouts
+/**
+ * Helper function to determine visual styles for sections based on layout and title.
+ * Used for Six Thinking Hats and Matrix layouts specifically.
+ *
+ * @param {string} frameworkLayout - The layout type.
+ * @param {number} index - The index of the section.
+ * @param {string} title - The title of the section.
+ * @returns {object} Tailwind CSS class strings for styling.
+ */
 const getSectionStyle = (frameworkLayout: string, index: number, title: string) => {
   const titleLower = title.toLowerCase();
   
@@ -63,6 +87,14 @@ const getSectionStyle = (frameworkLayout: string, index: number, title: string) 
   return { borderColor: 'border-stone-200', headerBg: 'bg-white/90', titleColor: 'text-ink', badge: 'bg-stone-100 text-stone-600' };
 };
 
+/**
+ * The main Workspace component.
+ * Provides an infinite canvas for working on the problem using the selected framework.
+ * Supports panning, zooming, drag-and-drop notes, AI generation, and saving/loading.
+ *
+ * @param {WorkspaceProps} props - The props for the workspace.
+ * @returns {JSX.Element} The rendered workspace.
+ */
 export const Workspace: React.FC<WorkspaceProps> = ({ 
   problem, 
   framework, 
