@@ -1,0 +1,39 @@
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: think-tank-db
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: thinktank
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  backend:
+    build: ./backend
+    container_name: think-tank-backend
+    environment:
+      DATABASE_URL: postgres://user:password@postgres:5432/thinktank
+      GEMINI_API_KEY: ${GEMINI_API_KEY}
+      PORT: 3000
+    ports:
+      - "3000:3000"
+    depends_on:
+      - postgres
+    restart: always
+
+  frontend:
+    build:
+      context: .
+      args:
+        VITE_API_URL: http://localhost:3000/api
+    container_name: think-tank-frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+
+volumes:
+  postgres_data:
