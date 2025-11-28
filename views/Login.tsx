@@ -1,24 +1,13 @@
+
 import React, { useState } from 'react';
 import { BrainCircuit, ArrowRight, Mail, Lock, User as UserIcon } from 'lucide-react';
 import { Button } from '../components/Button';
 import { User } from '../types';
 
-/**
- * @interface LoginProps
- * @property {(user: User) => void} onLogin - Callback function to handle the user login event.
- */
 interface LoginProps {
   onLogin: (user: User) => void;
 }
 
-/**
- * Renders a login and sign-up form.
- * The component manages its own state for form data and loading indicators.
- * It simulates an API call for authentication.
- *
- * @param {LoginProps} props - The props for the Login component.
- * @returns {React.ReactElement} The rendered login/signup view.
- */
 export const Login: React.FC<LoginProps> = ({ onLogin }) => {
   const [isSignUp, setIsSignUp] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -34,11 +23,16 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
 
     // Simulate API call
     setTimeout(() => {
+      // MOCK ADMIN LOGIC
+      const isAdmin = formData.email.toLowerCase() === 'admin@thinktank.com';
+      
       const mockUser: User = {
         id: 'user-' + Math.random().toString(36).substr(2, 9),
-        name: isSignUp ? formData.name : 'Demo User',
-        email: formData.email
+        name: isSignUp ? formData.name : (isAdmin ? 'Admin User' : 'Demo User'),
+        email: formData.email,
+        isAdmin: isAdmin
       };
+      
       onLogin(mockUser);
       setIsLoading(false);
     }, 1500);
@@ -90,6 +84,11 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
             <p className="text-stone-500">
               {isSignUp ? 'Start structuring your thoughts today.' : 'Please enter your details to sign in.'}
             </p>
+            {!isSignUp && (
+              <p className="text-xs text-stone-400 mt-2">
+                Tip: Use <strong>admin@thinktank.com</strong> to test Admin Dashboard.
+              </p>
+            )}
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-5">

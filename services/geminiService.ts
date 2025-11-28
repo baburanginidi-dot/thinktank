@@ -2,21 +2,8 @@ import { GoogleGenAI, Type, Schema } from "@google/genai";
 import { Framework, CanvasSection, CanvasNote, NoteColor } from "../types";
 import { v4 as uuidv4 } from 'uuid'; // Note: We'll simulate uuid if package not available or use random string
 
-/**
- * Generates a random 9-character string ID.
- * Note: This is a simple, non-crypto-secure ID generator.
- *
- * @returns {string} A random string identifier.
- */
 const generateId = () => Math.random().toString(36).substr(2, 9);
 
-/**
- * Initializes and returns a GoogleGenAI client instance.
- * It requires the API_KEY environment variable to be set.
- *
- * @throws {Error} If the API_KEY environment variable is not set.
- * @returns {GoogleGenAI} An instance of the GoogleGenAI client.
- */
 const getAiClient = () => {
   const apiKey = process.env.API_KEY;
   if (!apiKey) {
@@ -25,12 +12,6 @@ const getAiClient = () => {
   return new GoogleGenAI({ apiKey });
 };
 
-/**
- * Sends a problem statement to the AI to get a list of suggested problem-solving frameworks.
- *
- * @param {string} problemText - The user's problem statement.
- * @returns {Promise<Framework[]>} A promise that resolves to an array of suggested frameworks.
- */
 export const suggestFrameworks = async (problemText: string): Promise<Framework[]> => {
   const ai = getAiClient();
   
@@ -88,14 +69,6 @@ export const suggestFrameworks = async (problemText: string): Promise<Framework[
   }
 };
 
-/**
- * Initializes a new collaborative board based on a user's problem and a selected framework.
- * It uses AI to generate guiding questions and starter notes for each section of the framework.
- *
- * @param {string} problem - The user's problem statement.
- * @param {Framework} framework - The framework selected to structure the board.
- * @returns {Promise<CanvasSection[]>} A promise that resolves to an array of sections, complete with AI-generated questions and notes.
- */
 export const initializeBoard = async (problem: string, framework: Framework): Promise<CanvasSection[]> => {
   const ai = getAiClient();
 
@@ -184,20 +157,10 @@ export const initializeBoard = async (problem: string, framework: Framework): Pr
   }
 };
 
-/**
- * Generates new, context-aware ideas for a specific section of the board.
- * It takes into account the original problem, the framework, and existing notes to avoid duplication.
- *
- * @param {string} problem - The user's original problem statement.
- * @param {Framework} framework - The framework being used.
- * @param {string} sectionTitle - The title of the section to generate ideas for.
- * @param {string[]} currentNotes - A list of content from existing notes in the section.
- * @returns {Promise<CanvasNote[]>} A promise that resolves to an array of new, AI-generated notes.
- */
 export const generateSectionIdeas = async (
-  problem: string,
-  framework: Framework,
-  sectionTitle: string,
+  problem: string, 
+  framework: Framework, 
+  sectionTitle: string, 
   currentNotes: string[]
 ): Promise<CanvasNote[]> => {
   const ai = getAiClient();

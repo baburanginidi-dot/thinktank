@@ -1,15 +1,7 @@
-/**
- * @file This is the main entry point for the React application.
- * It renders the root App component into the DOM.
- */
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { App } from './App';
 
-/**
- * The root DOM element where the React application will be mounted.
- * @type {HTMLElement}
- */
 const rootElement = document.getElementById('root');
 if (!rootElement) {
   throw new Error("Could not find root element to mount to");

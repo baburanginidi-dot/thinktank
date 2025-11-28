@@ -2,13 +2,6 @@ import React from 'react';
 import { Framework } from '../types';
 import { ArrowRight, Layers, Cpu, Brain, Target, Grid2X2, Trello, Grid3X3, ArrowLeft } from 'lucide-react';
 
-/**
- * @interface FrameworkSelectionProps
- * @property {Framework[]} frameworks - An array of suggested frameworks to display.
- * @property {(framework: Framework) => void} onSelect - Callback function for when a framework is selected.
- * @property {() => void} onBack - Callback function to return to the previous view.
- * @property {string} problem - The problem statement, used for context.
- */
 interface FrameworkSelectionProps {
   frameworks: Framework[];
   onSelect: (framework: Framework) => void;
@@ -16,12 +9,6 @@ interface FrameworkSelectionProps {
   problem: string;
 }
 
-/**
- * Returns an icon component based on the framework category.
- *
- * @param {string} category - The category of the framework.
- * @returns {React.ReactElement} An icon component.
- */
 const getIconForCategory = (category: string) => {
   switch (category) {
     case 'Technical': return <Cpu size={20} />;
@@ -32,12 +19,6 @@ const getIconForCategory = (category: string) => {
   }
 };
 
-/**
- * Returns an icon component based on the framework layout type.
- *
- * @param {string} layout - The layout type of the framework.
- * @returns {React.ReactElement} An icon component.
- */
 const getLayoutIcon = (layout: string) => {
   switch(layout) {
     case 'matrix_2x2': return <Grid2X2 size={14} className="mr-1" />;
@@ -46,13 +27,6 @@ const getLayoutIcon = (layout: string) => {
   }
 };
 
-/**
- * Renders a view for selecting a problem-solving framework.
- * Displays a list of AI-suggested frameworks based on the user's problem.
- *
- * @param {FrameworkSelectionProps} props - The props for the component.
- * @returns {React.ReactElement} The framework selection view.
- */
 export const FrameworkSelection: React.FC<FrameworkSelectionProps> = ({ frameworks, onSelect, onBack, problem }) => {
   return (
     <div className="max-w-6xl mx-auto px-6 py-12 animate-fade-in-up">

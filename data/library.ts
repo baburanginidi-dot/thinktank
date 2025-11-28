@@ -1,11 +1,5 @@
 import { Framework } from "../types";
 
-/**
- * An array of predefined frameworks for strategic planning, mental models, product development, and technical architecture.
- * Each framework includes an ID, name, category, description, relevance, layout type, and the steps involved.
- *
- * @type {Framework[]}
- */
 export const LIBRARY_FRAMEWORKS: Framework[] = [
   // --- Strategic ---
   {

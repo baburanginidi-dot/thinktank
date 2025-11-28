@@ -2,22 +2,11 @@ import React from 'react';
 import { BrainCircuit, Shield, Zap, ArrowRight, Layers, ArrowLeft } from 'lucide-react';
 import { Button } from '../components/Button';
 
-/**
- * @interface AboutProps
- * @property {() => void} onStart - Callback function to initiate a new session.
- * @property {() => void} onBack - Callback function to return to the previous view.
- */
 interface AboutProps {
   onStart: () => void;
   onBack: () => void;
 }
 
-/**
- * Renders the About page, which explains the philosophy and features of the application.
- *
- * @param {AboutProps} props - The props for the About component.
- * @returns {React.ReactElement} The rendered about page.
- */
 export const About: React.FC<AboutProps> = ({ onStart, onBack }) => {
   return (
     <div className="max-w-4xl mx-auto px-6 py-12 md:py-20 animate-fade-in-up">

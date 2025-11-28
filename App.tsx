@@ -9,38 +9,16 @@ import { MethodologyDetail } from './views/MethodologyDetail';
 import { About } from './views/About';
 import { History } from './views/History';
 import { Login } from './views/Login';
+import { AdminDashboard } from './views/AdminDashboard';
 import { AppView, Framework, ProblemStatement, CanvasSection, SectionTemplate, NoteColor, User, SavedSession, Viewport } from './types';
 import { suggestFrameworks } from './services/geminiService';
 import { ToastContainer, ToastMessage, ToastType } from './components/Toast';
 
-/**
- * Local storage key for the active session.
- * @type {string}
- */
 const STORAGE_KEY = 'think_tank_session_v1';
-/**
- * Local storage key for session history.
- * @type {string}
- */
 const HISTORY_KEY = 'think_tank_history_v1';
-/**
- * Local storage key for saved templates.
- * @type {string}
- */
 const TEMPLATES_KEY = 'think_tank_templates_v1';
-/**
- * Local storage key for user data.
- * @type {string}
- */
 const USER_KEY = 'think_tank_user_v1';
 
-/**
- * The main application component.
- * It manages the application's state, including the current view, user authentication,
- * session data, and navigation between different views.
- *
- * @returns {React.ReactElement} The rendered application.
- */
 export const App: React.FC = () => {
   // Auth State
   const [user, setUser] = useState<User | null>(null);
@@ -207,8 +185,8 @@ export const App: React.FC = () => {
   const persistSession = (override?: Partial<any>) => {
     if (!user) return; 
     
-    // Don't persist if we are on public pages
-    if ([AppView.METHODOLOGY, AppView.METHODOLOGY_DETAIL, AppView.ABOUT].includes(view)) return;
+    // Don't persist if we are on public pages or admin
+    if ([AppView.METHODOLOGY, AppView.METHODOLOGY_DETAIL, AppView.ABOUT, AppView.ADMIN].includes(view)) return;
 
     // Save "Active State"
     const data = {
@@ -231,7 +209,7 @@ export const App: React.FC = () => {
 
   // Save session on view change or major state change
   useEffect(() => {
-    if (user && view !== AppView.LOGIN) {
+    if (user && view !== AppView.LOGIN && view !== AppView.ADMIN) {
       persistSession();
     }
   }, [view, problem, selectedFramework, frameworks, savedSections, savedViewport, user, sessionId]);
@@ -388,6 +366,12 @@ export const App: React.FC = () => {
     setView(AppView.ABOUT);
   };
 
+  const handleAdminClick = () => {
+    if (user && user.isAdmin) {
+      setView(AppView.ADMIN);
+    }
+  };
+
   const handleBack = () => {
     if (view === AppView.FRAMEWORK_SELECTION) {
       setView(AppView.HOME);
@@ -398,6 +382,8 @@ export const App: React.FC = () => {
     } else if (view === AppView.ABOUT) {
       setView(user ? AppView.HOME : AppView.METHODOLOGY);
     } else if (view === AppView.HISTORY) {
+      setView(AppView.HOME);
+    } else if (view === AppView.ADMIN) {
       setView(AppView.HOME);
     } else if (view === AppView.WORKSPACE) {
        // Save before exiting
@@ -421,7 +407,7 @@ export const App: React.FC = () => {
   }
 
   // Auth Guard: Only block specific protected routes
-  const protectedViews = [AppView.HOME, AppView.WORKSPACE, AppView.FRAMEWORK_SELECTION, AppView.HISTORY];
+  const protectedViews = [AppView.HOME, AppView.WORKSPACE, AppView.FRAMEWORK_SELECTION, AppView.HISTORY, AppView.ADMIN];
   if (!user && protectedViews.includes(view)) {
     return (
       <>
@@ -441,6 +427,7 @@ export const App: React.FC = () => {
         onAboutClick={handleAboutClick}
         onLogout={handleLogout}
         onLoginClick={() => setView(AppView.LOGIN)}
+        onAdminClick={handleAdminClick}
       />
       
       {view === AppView.HOME && (
@@ -483,6 +470,13 @@ export const App: React.FC = () => {
             if (user) setView(AppView.HOME);
             else setView(AppView.LOGIN);
           }} 
+          onBack={handleBack}
+        />
+      )}
+
+      {view === AppView.ADMIN && user?.isAdmin && (
+        <AdminDashboard 
+          user={user}
           onBack={handleBack}
         />
       )}
