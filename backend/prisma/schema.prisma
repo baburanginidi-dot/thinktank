@@ -1,0 +1,39 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Board {
+  id          String   @id @default(uuid())
+  title       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  frameworkId String?
+  sections    Section[]
+}
+
+model Section {
+  id          String   @id @default(uuid())
+  title       String
+  description String?
+  boardId     String
+  board       Board    @relation(fields: [boardId], references: [id])
+  notes       Note[]
+  order       Int      @default(0)
+}
+
+model Note {
+  id        String   @id @default(uuid())
+  content   String
+  color     String   @default("yellow")
+  sectionId String
+  section   Section  @relation(fields: [sectionId], references: [id])
+  createdAt DateTime @default(now())
+  isAiGenerated Boolean @default(false)
+}
