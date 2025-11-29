@@ -3,11 +3,24 @@ import React, { useState } from 'react';
 import { User } from '../types';
 import { ArrowLeft, Users, Activity, Database, Settings, Shield, AlertTriangle, CheckCircle, Search } from 'lucide-react';
 
+/**
+ * Props for the AdminDashboard component.
+ */
 interface AdminDashboardProps {
+  /** The currently logged-in admin user. */
   user: User;
+  /** Callback to go back to the previous view. */
   onBack: () => void;
 }
 
+/**
+ * Admin Dashboard view component.
+ * Provides system overview, user management, and settings for administrators.
+ * Note: Uses mock data for demonstration.
+ *
+ * @param {AdminDashboardProps} props - The props for the dashboard.
+ * @returns {JSX.Element} The rendered admin dashboard.
+ */
 export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, onBack }) => {
   const [activeTab, setActiveTab] = useState<'overview' | 'users' | 'frameworks' | 'settings'>('overview');
 

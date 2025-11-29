@@ -3,12 +3,25 @@ import { Framework } from '../types';
 import { ArrowLeft, ArrowRight, CheckCircle, Brain, Cpu, Layers, Target, Grid2X2, Grid3X3, Trello } from 'lucide-react';
 import { Button } from '../components/Button';
 
+/**
+ * Props for the MethodologyDetail view.
+ */
 interface MethodologyDetailProps {
+  /** The framework to display details for. */
   framework: Framework;
+  /** Callback to use this framework in a new session. */
   onUseTemplate: (framework: Framework) => void;
+  /** Callback to go back to the previous view. */
   onBack: () => void;
 }
 
+/**
+ * The Methodology Detail view.
+ * Displays deep dive information about a specific framework, including its steps and usage.
+ *
+ * @param {MethodologyDetailProps} props - The props for the view.
+ * @returns {JSX.Element} The rendered detail view.
+ */
 export const MethodologyDetail: React.FC<MethodologyDetailProps> = ({ framework, onUseTemplate, onBack }) => {
   
   const getIconForCategory = (category: string) => {

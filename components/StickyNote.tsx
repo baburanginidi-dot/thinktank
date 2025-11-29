@@ -3,13 +3,23 @@ import { CanvasNote, NoteColor } from '../types';
 import { X, Sparkles, Edit2, GripHorizontal } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 
+/**
+ * Props for the StickyNote component.
+ */
 interface StickyNoteProps {
+  /** The note data object. */
   note: CanvasNote;
+  /** The ID of the section this note belongs to. */
   sectionId: string;
+  /** Callback to update the note content. */
   onUpdate: (id: string, content: string) => void;
+  /** Callback to delete the note. */
   onDelete: (id: string) => void;
 }
 
+/**
+ * CSS classes mapping for each note color variant.
+ */
 const colorClasses: Record<NoteColor, string> = {
   yellow: 'bg-yellow-100 border-yellow-200 text-yellow-900 selection:bg-yellow-200 placeholder:text-yellow-900/30',
   blue: 'bg-blue-100 border-blue-200 text-blue-900 selection:bg-blue-200 placeholder:text-blue-900/30',
@@ -19,6 +29,13 @@ const colorClasses: Record<NoteColor, string> = {
   white: 'bg-white border-stone-200 text-stone-900 selection:bg-stone-100 placeholder:text-stone-300',
 };
 
+/**
+ * A draggable, editable sticky note component.
+ * Displays content in Markdown when not editing.
+ *
+ * @param {StickyNoteProps} props - The props for the sticky note.
+ * @returns {JSX.Element} The rendered sticky note.
+ */
 export const StickyNote: React.FC<StickyNoteProps> = ({ note, sectionId, onUpdate, onDelete }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [isDragging, setIsDragging] = useState(false);

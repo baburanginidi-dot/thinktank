@@ -3,11 +3,22 @@ import { GoogleGenAI, Schema, Type } from "@google/genai";
 import { Framework, CanvasSection, CanvasNote, NoteColor } from "../types";
 import { PrismaClient } from "@prisma/client";
 
+/**
+ * Prisma client instance for database operations.
+ */
 const prisma = new PrismaClient();
 
-// Helper to generate ID if uuid is not available or just simple
+/**
+ * Generates a simple random ID.
+ * @returns {string} A random alphanumeric string.
+ */
 const generateId = () => Math.random().toString(36).substr(2, 9);
 
+/**
+ * Initializes and returns the Google GenAI client.
+ * @throws {Error} If GEMINI_API_KEY environment variable is not set.
+ * @returns {GoogleGenAI} The Google GenAI client instance.
+ */
 const getAiClient = () => {
   const apiKey = process.env.GEMINI_API_KEY; // Changed to GEMINI_API_KEY to distinguish
   if (!apiKey) {
@@ -16,6 +27,13 @@ const getAiClient = () => {
   return new GoogleGenAI({ apiKey });
 };
 
+/**
+ * Suggests frameworks based on a problem statement using AI.
+ *
+ * @param {Request} req - The Express request object.
+ * @param {Response} res - The Express response object.
+ * @returns {Promise<void>} Sends a JSON response with suggested frameworks or an error.
+ */
 export const suggestFrameworks = async (req: Request, res: Response): Promise<void> => {
   try {
     const { problem } = req.body;
@@ -84,6 +102,13 @@ export const suggestFrameworks = async (req: Request, res: Response): Promise<vo
   }
 };
 
+/**
+ * Initializes a board with specific sections and starter notes based on a selected framework and problem.
+ *
+ * @param {Request} req - The Express request object.
+ * @param {Response} res - The Express response object.
+ * @returns {Promise<void>} Sends a JSON response with the initialized sections or an error.
+ */
 export const initializeBoard = async (req: Request, res: Response): Promise<void> => {
   try {
     const { problem, framework } = req.body;
@@ -224,6 +249,13 @@ export const initializeBoard = async (req: Request, res: Response): Promise<void
   }
 };
 
+/**
+ * Generates specific ideas for a given section of the board.
+ *
+ * @param {Request} req - The Express request object.
+ * @param {Response} res - The Express response object.
+ * @returns {Promise<void>} Sends a JSON response with generated notes or an error.
+ */
 export const generateSectionIdeas = async (req: Request, res: Response): Promise<void> => {
   try {
     const { problem, framework, sectionTitle, currentNotes } = req.body;

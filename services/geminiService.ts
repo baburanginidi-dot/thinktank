@@ -1,7 +1,13 @@
 import { Framework, CanvasSection, CanvasNote } from "../types";
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+const API_URL = import.meta.env?.VITE_API_URL || 'http://localhost:3000/api';
 
+/**
+ * Suggests a list of frameworks based on a problem statement.
+ *
+ * @param {string} problemText - The problem statement to analyze.
+ * @returns {Promise<Framework[]>} A promise that resolves to an array of suggested frameworks.
+ */
 export const suggestFrameworks = async (problemText: string): Promise<Framework[]> => {
   try {
     const response = await fetch(`${API_URL}/suggest-frameworks`, {
@@ -23,6 +29,13 @@ export const suggestFrameworks = async (problemText: string): Promise<Framework[
   }
 };
 
+/**
+ * Initializes a board for a selected framework and problem.
+ *
+ * @param {string} problem - The problem statement.
+ * @param {Framework} framework - The selected framework.
+ * @returns {Promise<CanvasSection[]>} A promise that resolves to the initialized sections of the board.
+ */
 export const initializeBoard = async (problem: string, framework: Framework): Promise<CanvasSection[]> => {
   try {
     const response = await fetch(`${API_URL}/initialize-board`, {
@@ -50,6 +63,15 @@ export const initializeBoard = async (problem: string, framework: Framework): Pr
   }
 };
 
+/**
+ * Generates specific ideas for a given section of the board.
+ *
+ * @param {string} problem - The problem statement.
+ * @param {Framework} framework - The framework being used.
+ * @param {string} sectionTitle - The title of the section to generate ideas for.
+ * @param {string[]} currentNotes - A list of existing note contents in the section.
+ * @returns {Promise<CanvasNote[]>} A promise that resolves to an array of generated notes.
+ */
 export const generateSectionIdeas = async (
   problem: string, 
   framework: Framework, 
