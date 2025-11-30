@@ -13,6 +13,9 @@ export default defineConfig(({ mode }) => {
           host: process.env.REPL_SLUG ? `${process.env.REPL_SLUG}.${process.env.REPL_OWNER}.repl.co` : undefined,
           clientPort: 443,
         },
+        allowedHosts: [
+          '541f890b-5a94-4418-8c1e-2d328fdb5edd-00-1lagwlhhfish0.sisko.replit.dev'
+        ]
       },
       plugins: [react()],
       define: {
