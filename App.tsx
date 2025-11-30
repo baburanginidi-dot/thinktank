@@ -12,12 +12,8 @@ import { Login } from './views/Login';
 import { AdminDashboard } from './views/AdminDashboard';
 import { AppView, Framework, ProblemStatement, CanvasSection, SectionTemplate, NoteColor, User, SavedSession, Viewport } from './types';
 import { suggestFrameworks } from './services/geminiService';
+import { api } from './services/api';
 import { ToastContainer, ToastMessage, ToastType } from './components/Toast';
-
-const STORAGE_KEY = 'think_tank_session_v1';
-const HISTORY_KEY = 'think_tank_history_v1';
-const TEMPLATES_KEY = 'think_tank_templates_v1';
-const USER_KEY = 'think_tank_user_v1';
 
 export const App: React.FC = () => {
   // Auth State
@@ -49,87 +45,54 @@ export const App: React.FC = () => {
   // --- Auth & Persistence Logic ---
 
   useEffect(() => {
-    // Check Auth
-    const storedUser = localStorage.getItem(USER_KEY);
-    
-    if (storedUser) {
-      const parsedUser = JSON.parse(storedUser);
-      setUser(parsedUser);
-      
-      // Load User Data
-      loadUserData();
-
-      // Restore active session if exists
-      const savedSession = localStorage.getItem(STORAGE_KEY);
-      if (savedSession) {
-        try {
-          const data = JSON.parse(savedSession);
-          if (data.problem && data.framework) {
-             setSessionId(data.sessionId || Math.random().toString(36).substr(2, 9));
-             setProblem(data.problem);
-             setSelectedFramework(data.framework);
-             setSavedSections(data.sections || []);
-             setSavedViewport(data.viewport);
-             setFrameworks(data.frameworks || []);
-             
-             // If they were on a protected view, restore it. Otherwise default to Home.
-             if (data.view && [AppView.WORKSPACE, AppView.FRAMEWORK_SELECTION].includes(data.view)) {
-                setView(data.view);
-             } else {
-                setView(AppView.HOME);
-             }
-          } else {
-            setView(AppView.HOME);
-          }
-        } catch (e) {
+    const initAuth = async () => {
+      // Check if token exists
+      const storedToken = localStorage.getItem('auth_token');
+      if (storedToken) {
+        api.setToken(storedToken);
+        // For now, assume valid token (in production, validate with backend)
+        const storedUser = localStorage.getItem('user_data');
+        if (storedUser) {
+          const parsedUser = JSON.parse(storedUser);
+          setUser(parsedUser);
+          await loadUserData();
           setView(AppView.HOME);
         }
       } else {
-        setView(AppView.HOME);
+        if (![AppView.METHODOLOGY, AppView.METHODOLOGY_DETAIL, AppView.ABOUT, AppView.LOGIN].includes(view)) {
+          setView(AppView.METHODOLOGY);
+        }
       }
-    } else {
-      // GUEST MODE
-      // Ensure we are on a public view. If not, default to Methodology (Landing)
-      if (![AppView.METHODOLOGY, AppView.METHODOLOGY_DETAIL, AppView.ABOUT, AppView.LOGIN].includes(view)) {
-        setView(AppView.METHODOLOGY);
-      }
-    }
-    setIsAuthChecked(true);
+      setIsAuthChecked(true);
+    };
 
+    initAuth();
   }, []);
 
-  const loadUserData = () => {
-    // Load History
-    const storedHistory = localStorage.getItem(HISTORY_KEY);
-    if (storedHistory) {
-      try {
-        setHistory(JSON.parse(storedHistory));
-      } catch (e) {
-        console.error("Failed to load history", e);
-      }
-    }
+  const loadUserData = async () => {
+    try {
+      // Load History from API
+      const sessions = await api.getSessions();
+      setHistory(sessions);
 
-    // Load Templates
-    const savedTemplates = localStorage.getItem(TEMPLATES_KEY);
-    if (savedTemplates) {
-      try {
-        setTemplates(JSON.parse(savedTemplates));
-      } catch (e) {
-        console.error("Failed to load templates", e);
-      }
+      // Load Templates from API
+      const templates = await api.getTemplates();
+      setTemplates(templates);
+    } catch (e) {
+      console.error("Failed to load user data", e);
+      addToast("Failed to load your data", "error");
     }
   };
 
-  const handleLogin = (newUser: User) => {
+  const handleLogin = async (newUser: User) => {
     setUser(newUser);
-    localStorage.setItem(USER_KEY, JSON.stringify(newUser));
-    loadUserData();
+    localStorage.setItem('user_data', JSON.stringify(newUser));
+    await loadUserData();
     
     addToast(`Welcome back, ${newUser.name}`, 'success');
 
     // Handle Pending Actions (e.g., started a template while guest)
     if (pendingTemplate) {
-      // Small delay to allow state update
       setTimeout(() => handleStartFromLibrary(pendingTemplate), 100);
       setPendingTemplate(null);
     } else {
@@ -145,74 +108,49 @@ export const App: React.FC = () => {
     setSavedSections([]);
     setSavedViewport(undefined);
     setSessionId(null);
-    localStorage.removeItem(USER_KEY);
-    localStorage.removeItem(STORAGE_KEY);
-    setView(AppView.METHODOLOGY); // Redirect to public landing
+    localStorage.removeItem('user_data');
+    api.clearToken();
+    setView(AppView.METHODOLOGY);
     addToast("Signed out successfully", 'info');
   };
 
   // Helper to save current state to history array
-  const saveToHistory = (
+  const saveToHistory = async (
     currentId: string, 
     currentProblem: ProblemStatement, 
     currentFramework: Framework, 
     currentSections: CanvasSection[],
     currentViewport?: Viewport
   ) => {
-    const sessionEntry: SavedSession = {
-      id: currentId,
-      problem: currentProblem,
-      framework: currentFramework,
-      sections: currentSections,
-      viewport: currentViewport,
-      lastModified: Date.now()
-    };
+    if (!user) return;
+    try {
+      const saved = await api.saveSession({
+        id: currentId,
+        problemText: currentProblem.text,
+        frameworkData: currentFramework,
+        sectionsData: currentSections,
+        viewportData: currentViewport
+      });
 
-    setHistory(prev => {
-      const existingIndex = prev.findIndex(s => s.id === currentId);
-      let newHistory;
-      if (existingIndex >= 0) {
-        newHistory = [...prev];
-        newHistory[existingIndex] = sessionEntry;
-      } else {
-        newHistory = [sessionEntry, ...prev];
-      }
-      localStorage.setItem(HISTORY_KEY, JSON.stringify(newHistory));
-      return newHistory;
-    });
-  };
-
-  const persistSession = (override?: Partial<any>) => {
-    if (!user) return; 
-    
-    // Don't persist if we are on public pages or admin
-    if ([AppView.METHODOLOGY, AppView.METHODOLOGY_DETAIL, AppView.ABOUT, AppView.ADMIN].includes(view)) return;
-
-    // Save "Active State"
-    const data = {
-      sessionId,
-      view: view === AppView.LOGIN ? AppView.HOME : view,
-      problem,
-      framework: selectedFramework,
-      sections: savedSections,
-      viewport: savedViewport,
-      frameworks,
-      ...override
-    };
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-  };
-
-  const persistTemplates = (newTemplates: SectionTemplate[]) => {
-    setTemplates(newTemplates);
-    localStorage.setItem(TEMPLATES_KEY, JSON.stringify(newTemplates));
-  };
-
-  // Save session on view change or major state change
-  useEffect(() => {
-    if (user && view !== AppView.LOGIN && view !== AppView.ADMIN) {
-      persistSession();
+      setHistory(prev => {
+        const existingIndex = prev.findIndex(s => s.id === currentId);
+        if (existingIndex >= 0) {
+          const newHistory = [...prev];
+          newHistory[existingIndex] = saved;
+          return newHistory;
+        } else {
+          return [saved, ...prev];
+        }
+      });
+    } catch (e) {
+      console.error("Failed to save session", e);
     }
-  }, [view, problem, selectedFramework, frameworks, savedSections, savedViewport, user, sessionId]);
+  };
+
+  const persistTemplates = async (newTemplates: SectionTemplate[]) => {
+    setTemplates(newTemplates);
+  };
+
 
   // --- Toast Logic ---
 
@@ -238,7 +176,6 @@ export const App: React.FC = () => {
       }
       setFrameworks(suggestions);
       setView(AppView.FRAMEWORK_SELECTION);
-      persistSession({ view: AppView.FRAMEWORK_SELECTION, problem: { text, timestamp: Date.now() }, frameworks: suggestions });
     } catch (e) {
       console.error("Failed to get suggestions", e);
       addToast("Failed to analyze problem. Check connection.", "error");
