@@ -1,0 +1,58 @@
+Role: Senior Full-Stack Developer (Node.js + React)
+
+Context: I am building the "History" feature for my app "Think Tank". We have updated the database schema for the sessions table to support Soft Deletes (using a deleted_at column) and optimized indexing. Now, I need to update the Backend API and Frontend Logic to match this new schema. The goal is to make the History list load instantly by not fetching the heavy canvas data (sections_data) until the user actually clicks "Resume".
+
+Task: Refactor server.ts, services/api.ts, and App.tsx to implement efficient History loading and Session resumption.
+
+Action Items:
+
+1. Update Backend (server.ts):
+
+Refactor GET /api/sessions:
+
+Change the query to exclude sections_data and viewport_data (return empty/null for now).
+
+Add a WHERE deleted_at IS NULL clause to filter out soft-deleted sessions.
+
+Ensure it sorts by last_modified DESC.
+
+Create GET /api/sessions/:id:
+
+Create a new endpoint that fetches all columns (including the heavy sections_data and viewport_data) for a single session ID.
+
+Ensure it also checks deleted_at IS NULL.
+
+Refactor DELETE /api/sessions/:id:
+
+Change the DELETE SQL statement to an UPDATE statement that sets deleted_at = CURRENT_TIMESTAMP.
+
+2. Update Frontend Service (src/services/api.ts):
+
+Add a new method getSessionById(id: string) that calls the new backend endpoint GET /api/sessions/:id.
+
+3. Update App Logic (src/App.tsx):
+
+Locate the handleOpenSession function.
+
+Update it to fetch the full session details using api.getSessionById(session.id) before setting the state.
+
+Wrap this action in setIsLoading(true) / setIsLoading(false) to show a loading state while the heavy data is being retrieved.
+
+Technical Reference:
+
+Current Schema:
+
+SQL
+
+CREATE TABLE IF NOT EXISTS sessions (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  problem_text VARCHAR(1024),
+  framework_data JSONB,
+  sections_data JSONB,
+  viewport_data JSONB,
+  last_modified TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  deleted_at TIMESTAMP
+);
+Please implement these changes now.

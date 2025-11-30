@@ -290,7 +290,7 @@ app.get('/api/admin/stats', authMiddleware, async (req: any, res: Response) => {
     }
 
     const totalUsers = await pool.query('SELECT COUNT(*) as count FROM users');
-    const activeSessions = await pool.query('SELECT COUNT(*) as count FROM sessions WHERE last_modified > NOW() - INTERVAL \'24 hours\'');
+    const activeSessions = await pool.query('SELECT COUNT(*) as count FROM sessions WHERE last_modified > NOW() - INTERVAL \'24 hours\' AND deleted_at IS NULL');
     const totalFrameworks = 24; // Static for now
 
     res.json({
@@ -316,7 +316,7 @@ app.get('/api/admin/activity', authMiddleware, async (req: any, res: Response) =
       'SELECT email, name, created_at FROM users ORDER BY created_at DESC LIMIT 5'
     );
     const recentSessions = await pool.query(
-      'SELECT s.id, s.problem_text, s.last_modified FROM sessions ORDER BY last_modified DESC LIMIT 5'
+      'SELECT id, problem_text, last_modified FROM sessions WHERE deleted_at IS NULL ORDER BY last_modified DESC LIMIT 5'
     );
 
     const activity = [];
@@ -331,7 +331,7 @@ app.get('/api/admin/activity', authMiddleware, async (req: any, res: Response) =
       activity.push({
         type: 'session_created',
         message: `Session: ${session.problem_text || 'Untitled'}`,
-        timestamp: session.last_modified
+        timestamp: session.last_modified || new Date()
       });
     }
 
