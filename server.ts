@@ -41,16 +41,20 @@ async function initializeDatabase() {
 // Auth Middleware
 interface AuthRequest extends Request {
   user?: { id: string; email: string };
+  body?: any;
+  params?: any;
+  headers: Record<string, any>;
 }
 
-const authMiddleware = async (req: AuthRequest, res: Response, next: NextFunction) => {
-  const token = req.headers.authorization?.split(' ')[1];
+const authMiddleware = (req: Request, res: Response, next: NextFunction) => {
+  const authReq = req as AuthRequest;
+  const token = authReq.headers.authorization?.split(' ')[1];
   if (!token) {
     return res.status(401).json({ error: 'No token provided' });
   }
   try {
     const decoded = jwt.verify(token, JWT_SECRET) as { id: string; email: string };
-    req.user = decoded;
+    authReq.user = decoded;
     next();
   } catch (error) {
     res.status(401).json({ error: 'Invalid token' });
@@ -58,7 +62,7 @@ const authMiddleware = async (req: AuthRequest, res: Response, next: NextFunctio
 };
 
 // Auth Routes
-app.post('/api/auth/register', async (req: Request, res: Response) => {
+app.post('/api/auth/register', async (req: any, res: Response) => {
   try {
     const { email, name, password } = req.body;
     if (!email || !name || !password) {
@@ -86,7 +90,7 @@ app.post('/api/auth/register', async (req: Request, res: Response) => {
   }
 });
 
-app.post('/api/auth/login', async (req: Request, res: Response) => {
+app.post('/api/auth/login', async (req: any, res: Response) => {
   try {
     const { email, password } = req.body;
     if (!email || !password) {
@@ -174,7 +178,7 @@ app.post('/api/sessions', authMiddleware, async (req: AuthRequest, res: Response
   }
 });
 
-app.delete('/api/sessions/:id', authMiddleware, async (req: AuthRequest, res: Response) => {
+app.delete('/api/sessions/:id', authMiddleware, async (req: any, res: Response) => {
   try {
     const { id } = req.params;
     const result = await pool.query(
@@ -210,7 +214,7 @@ app.get('/api/templates', authMiddleware, async (req: AuthRequest, res: Response
   }
 });
 
-app.post('/api/templates', authMiddleware, async (req: AuthRequest, res: Response) => {
+app.post('/api/templates', authMiddleware, async (req: any, res: Response) => {
   try {
     const { name, data } = req.body;
     if (!name || !data) {
@@ -234,7 +238,7 @@ app.post('/api/templates', authMiddleware, async (req: AuthRequest, res: Respons
   }
 });
 
-app.delete('/api/templates/:id', authMiddleware, async (req: AuthRequest, res: Response) => {
+app.delete('/api/templates/:id', authMiddleware, async (req: any, res: Response) => {
   try {
     const { id } = req.params;
     const result = await pool.query(

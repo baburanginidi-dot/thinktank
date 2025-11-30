@@ -241,41 +241,48 @@ export const App: React.FC = () => {
     addToast("Session loaded", 'success');
   };
 
-  const handleDeleteSession = (id: string) => {
-    setHistory(prev => {
-      const updated = prev.filter(s => s.id !== id);
-      localStorage.setItem(HISTORY_KEY, JSON.stringify(updated));
-      return updated;
-    });
-    
-    // If deleted session is current active one, reset?
-    if (sessionId === id) {
-       handleHomeClick();
+  const handleDeleteSession = async (id: string) => {
+    try {
+      await api.deleteSession(id);
+      setHistory(prev => prev.filter(s => s.id !== id));
+      
+      if (sessionId === id) {
+        handleHomeClick();
+      }
+      addToast("Session deleted", 'info');
+    } catch (e) {
+      console.error("Failed to delete session", e);
+      addToast("Failed to delete session", "error");
     }
-    
-    addToast("Session deleted", 'info');
   };
 
-  const handleSaveTemplate = (section: CanvasSection, name: string) => {
-    const newTemplate: SectionTemplate = {
-      id: Math.random().toString(36).substr(2, 9),
-      name,
-      createdAt: Date.now(),
-      data: {
+  const handleSaveTemplate = async (section: CanvasSection, name: string) => {
+    try {
+      const data = {
         title: section.title,
         description: section.description,
         notes: section.notes.map(n => ({ content: n.content, color: n.color }))
-      }
-    };
-    const updated = [...templates, newTemplate];
-    persistTemplates(updated);
-    addToast("Template saved successfully", "success");
+      };
+      const newTemplate = await api.saveTemplate(name, data);
+      const updated = [...templates, newTemplate];
+      await persistTemplates(updated);
+      addToast("Template saved successfully", "success");
+    } catch (e) {
+      console.error("Failed to save template", e);
+      addToast("Failed to save template", "error");
+    }
   };
 
-  const handleDeleteTemplate = (id: string) => {
-    const updated = templates.filter(t => t.id !== id);
-    persistTemplates(updated);
-    addToast("Template deleted", "info");
+  const handleDeleteTemplate = async (id: string) => {
+    try {
+      await api.deleteTemplate(id);
+      const updated = templates.filter(t => t.id !== id);
+      await persistTemplates(updated);
+      addToast("Template deleted", "info");
+    } catch (e) {
+      console.error("Failed to delete template", e);
+      addToast("Failed to delete template", "error");
+    }
   };
 
   const handleHomeClick = () => {

@@ -1,0 +1,53 @@
+I have a React frontend (Vite + TypeScript) for a problem-solving app called "Think Tank". Currently, it uses localStorage for persistence in App.tsx.
+
+I want to migrate this to a real backend using Node.js, Express, and PostgreSQL.
+
+I have already created a file named create_tables.sql that contains the necessary database schema using JSONB columns.
+
+Please perform the following tasks:
+
+Backend Setup:
+
+Initialize a new server.js file using Express.
+
+Install necessary dependencies: pg, express, cors, dotenv, jsonwebtoken, bcryptjs.
+
+Set up the connection to the Replit PostgreSQL database using process.env.DATABASE_URL.
+
+Database Initialization:
+
+Create a function to read and execute the create_tables.sql file on server startup to ensure the tables (users, sessions, section_templates) exist.
+
+API Development:
+
+Auth: Create POST /api/auth/register and POST /api/auth/login (return a JWT token).
+
+Sessions:
+
+GET /api/sessions: Fetch all sessions for the logged-in user (joined with users table if needed, but primarily filtering by user_id).
+
+POST /api/sessions: Upsert a session. Check if the id exists; if so, update last_modified, framework_data, sections_data, and viewport_data. If not, insert a new row.
+
+DELETE /api/sessions/:id: Delete a session.
+
+Templates:
+
+GET /api/templates: Fetch user's templates.
+
+POST /api/templates: Save a new template.
+
+Frontend Integration:
+
+Create a new file src/services/api.ts to handle the fetch calls, attach the Authorization: Bearer <token> header, and manage token storage.
+
+Refactor src/App.tsx to completely remove the localStorage logic (specifically STORAGE_KEY, HISTORY_KEY, USER_KEY).
+
+Update App.tsx to use the new api.ts methods for logging in, loading history/templates, and saving the workspace state.
+
+Important Data Handling Note:
+
+The PostgreSQL tables use JSONB for framework_data, sections_data, and viewport_data.
+
+The frontend sends these as standard JSON objects. Ensure the backend inserts them correctly into the JSONB columns.
+
+When retrieving data, send them back as standard JSON so the frontend types.ts interfaces remain valid without changes.

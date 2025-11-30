@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { BrainCircuit, ArrowRight, Mail, Lock, User as UserIcon } from 'lucide-react';
 import { Button } from '../components/Button';
 import { User } from '../types';
+import { api } from '../services/api';
 
 interface LoginProps {
   onLogin: (user: User) => void;
@@ -11,6 +12,7 @@ interface LoginProps {
 export const Login: React.FC<LoginProps> = ({ onLogin }) => {
   const [isSignUp, setIsSignUp] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -19,18 +21,20 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError('');
     setIsLoading(true);
-    setTimeout(() => {
-      const isAdmin = formData.email.toLowerCase() === 'admin@thinktank.com';
-      const mockUser: User = {
-        id: 'user-' + Math.random().toString(36).substr(2, 9),
-        name: isSignUp ? formData.name : (isAdmin ? 'Admin User' : 'Demo User'),
-        email: formData.email,
-        isAdmin: isAdmin
-      };
-      onLogin(mockUser);
+    try {
+      if (isSignUp) {
+        const { user } = await api.register(formData.email, formData.name, formData.password);
+        onLogin(user);
+      } else {
+        const { user } = await api.login(formData.email, formData.password);
+        onLogin(user);
+      }
+    } catch (err: any) {
+      setError(err.message || 'Authentication failed');
       setIsLoading(false);
-    }, 1500);
+    }
   };
 
   return (
@@ -102,9 +106,11 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
             </Button>
           </form>
 
+          {error && <p className="text-red-600 text-sm mt-4 text-center">{error}</p>}
+
           <div className="mt-6 text-center">
             <button 
-              onClick={() => setIsSignUp(!isSignUp)}
+              onClick={() => { setIsSignUp(!isSignUp); setError(''); }}
               className="text-sm text-ink font-semibold hover:underline"
             >
               {isSignUp ? 'Already have an account?' : 'Create an account'}
