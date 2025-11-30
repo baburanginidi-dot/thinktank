@@ -51,10 +51,25 @@ export const api = {
       id: s.id,
       problem: { text: s.problemText, timestamp: s.lastModified },
       framework: s.frameworkData,
-      sections: s.sectionsData || [],
-      viewport: s.viewportData,
+      sections: [],
       lastModified: s.lastModified
     }));
+  },
+
+  async getSession(id: string): Promise<SavedSession> {
+    const res = await fetch(`${API_BASE}/api/sessions/${id}`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    if (!res.ok) throw new Error('Failed to fetch session');
+    const data = await res.json();
+    return {
+      id: data.id,
+      problem: { text: data.problemText, timestamp: data.lastModified },
+      framework: data.frameworkData,
+      sections: data.sectionsData || [],
+      viewport: data.viewportData,
+      lastModified: data.lastModified
+    };
   },
 
   async saveSession(session: {

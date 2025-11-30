@@ -16,7 +16,8 @@ CREATE TABLE IF NOT EXISTS sessions (
   sections_data JSONB,
   viewport_data JSONB,
   last_modified TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  deleted_at TIMESTAMP
 );
 
 CREATE TABLE IF NOT EXISTS section_templates (
@@ -29,4 +30,5 @@ CREATE TABLE IF NOT EXISTS section_templates (
 );
 
 CREATE INDEX IF NOT EXISTS idx_sessions_user_id ON sessions(user_id);
+CREATE INDEX IF NOT EXISTS idx_sessions_user_last_modified ON sessions(user_id, last_modified DESC);
 CREATE INDEX IF NOT EXISTS idx_templates_user_id ON section_templates(user_id);

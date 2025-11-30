@@ -230,15 +230,22 @@ export const App: React.FC = () => {
   };
 
   // History Handlers
-  const handleOpenSession = (session: SavedSession) => {
-    setSessionId(session.id);
-    setProblem(session.problem);
-    setSelectedFramework(session.framework);
-    setSavedSections(session.sections);
-    setSavedViewport(session.viewport);
-    setFrameworks([]); // Clear suggestions as we are loading a defined state
-    setView(AppView.WORKSPACE);
-    addToast("Session loaded", 'success');
+  const handleOpenSession = async (session: SavedSession) => {
+    try {
+      // Fetch full session data (sections, viewport)
+      const fullSession = await api.getSession(session.id);
+      setSessionId(fullSession.id);
+      setProblem(fullSession.problem);
+      setSelectedFramework(fullSession.framework);
+      setSavedSections(fullSession.sections);
+      setSavedViewport(fullSession.viewport);
+      setFrameworks([]); // Clear suggestions as we are loading a defined state
+      setView(AppView.WORKSPACE);
+      addToast("Session loaded", 'success');
+    } catch (e) {
+      console.error("Failed to load session", e);
+      addToast("Failed to load session", "error");
+    }
   };
 
   const handleDeleteSession = async (id: string) => {

@@ -122,23 +122,48 @@ app.post('/api/auth/login', async (req: any, res: Response) => {
 });
 
 // Session Routes (Protected)
+// GET /api/sessions - Lightweight history list (excludes heavy sections_data & viewport_data)
 app.get('/api/sessions', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
     const result = await pool.query(
-      'SELECT id, problem_text, framework_data, sections_data, viewport_data, last_modified FROM sessions WHERE user_id = $1 ORDER BY last_modified DESC',
+      'SELECT id, problem_text, framework_data, last_modified FROM sessions WHERE user_id = $1 AND deleted_at IS NULL ORDER BY last_modified DESC',
       [req.user?.id]
     );
     res.json(result.rows.map(row => ({
       id: row.id,
       problemText: row.problem_text,
       frameworkData: row.framework_data,
-      sectionsData: row.sections_data,
-      viewportData: row.viewport_data,
       lastModified: new Date(row.last_modified).getTime()
     })));
   } catch (error) {
     console.error('Get sessions error:', error);
     res.status(500).json({ error: 'Failed to fetch sessions' });
+  }
+});
+
+// GET /api/sessions/:id - Full session details (for resuming)
+app.get('/api/sessions/:id', authMiddleware, async (req: any, res: Response) => {
+  try {
+    const { id } = req.params;
+    const result = await pool.query(
+      'SELECT id, problem_text, framework_data, sections_data, viewport_data, last_modified FROM sessions WHERE id = $1 AND user_id = $2 AND deleted_at IS NULL',
+      [id, req.user?.id]
+    );
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Session not found' });
+    }
+    const row = result.rows[0];
+    res.json({
+      id: row.id,
+      problemText: row.problem_text,
+      frameworkData: row.framework_data,
+      sectionsData: row.sections_data,
+      viewportData: row.viewport_data,
+      lastModified: new Date(row.last_modified).getTime()
+    });
+  } catch (error) {
+    console.error('Get session error:', error);
+    res.status(500).json({ error: 'Failed to fetch session' });
   }
 });
 
@@ -182,7 +207,7 @@ app.delete('/api/sessions/:id', authMiddleware, async (req: any, res: Response) 
   try {
     const { id } = req.params;
     const result = await pool.query(
-      'DELETE FROM sessions WHERE id = $1 AND user_id = $2 RETURNING id',
+      'UPDATE sessions SET deleted_at = CURRENT_TIMESTAMP WHERE id = $1 AND user_id = $2 RETURNING id',
       [id, req.user?.id]
     );
     if (result.rows.length === 0) {
