@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { User } from '../types';
 import { ArrowLeft, Users, Activity, Database, Settings, Shield, AlertTriangle, CheckCircle, Search } from 'lucide-react';
+import { api } from '../services/api';
 
 interface AdminDashboardProps {
   user: User;
@@ -9,11 +10,38 @@ interface AdminDashboardProps {
 
 export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, onBack }) => {
   const [activeTab, setActiveTab] = useState<'overview' | 'users' | 'frameworks' | 'settings'>('overview');
+  const [stats, setStats] = useState({ totalUsers: 0, activeSessions: 0, frameworks: 24 });
+  const [activity, setActivity] = useState<any[]>([]);
+  const [adminUsers, setAdminUsers] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const stats = [
-    { label: 'Total Users', value: '1,248', change: '+12%', icon: <Users size={20} className="text-blue-500" /> },
-    { label: 'Active Sessions', value: '86', change: '+5%', icon: <Activity size={20} className="text-green-500" /> },
-    { label: 'Frameworks', value: '24', change: '0%', icon: <Database size={20} className="text-purple-500" /> },
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [statsData, activityData, usersData] = await Promise.all([
+          api.getAdminStats(),
+          api.getAdminActivity(),
+          api.getAdminUsers()
+        ]);
+        setStats(statsData);
+        setActivity(activityData);
+        setAdminUsers(usersData);
+      } catch (error) {
+        console.error('Failed to fetch admin data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+    const interval = setInterval(fetchData, 5000); // Refresh every 5 seconds
+    return () => clearInterval(interval);
+  }, []);
+
+  const statCards = [
+    { label: 'Total Users', value: stats.totalUsers, change: '+12%', icon: <Users size={20} className="text-blue-500" /> },
+    { label: 'Active Sessions', value: stats.activeSessions, change: '+5%', icon: <Activity size={20} className="text-green-500" /> },
+    { label: 'Frameworks', value: stats.frameworks, change: '0%', icon: <Database size={20} className="text-purple-500" /> },
   ];
 
   return (
@@ -62,7 +90,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, onBack }) 
         {activeTab === 'overview' && (
           <div className="space-y-8">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {stats.map((stat, idx) => (
+              {statCards.map((stat, idx) => (
                 <div key={idx} className="bg-white border border-stone-200 p-6 rounded-xl shadow-sm flex items-center justify-between hover:shadow-md transition-shadow">
                   <div>
                     <div className="text-xs font-bold text-stone-400 uppercase tracking-wider mb-2">{stat.label}</div>
@@ -91,16 +119,14 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, onBack }) 
                <div className="bg-white border border-stone-200 rounded-xl p-6">
                  <h3 className="text-lg font-serif text-ink mb-6">Recent Activity</h3>
                  <div className="space-y-4">
-                    <div className="flex items-center gap-3 text-sm">
-                       <div className="w-2 h-2 rounded-full bg-blue-500"></div>
-                       <span className="text-stone-500">New user registration: <span className="text-ink font-medium">alice@example.com</span></span>
-                       <span className="ml-auto text-xs text-stone-400">2m ago</span>
-                    </div>
-                    <div className="flex items-center gap-3 text-sm">
-                       <div className="w-2 h-2 rounded-full bg-purple-500"></div>
-                       <span className="text-stone-500">Session created: <span className="text-ink font-medium">Q3 Strategy</span></span>
-                       <span className="ml-auto text-xs text-stone-400">15m ago</span>
-                    </div>
+                    {activity.slice(0, 5).map((item, idx) => (
+                      <div key={idx} className="flex items-center gap-3 text-sm">
+                         <div className={`w-2 h-2 rounded-full ${item.type === 'user_registration' ? 'bg-blue-500' : 'bg-purple-500'}`}></div>
+                         <span className="text-stone-500">{item.message}</span>
+                         <span className="ml-auto text-xs text-stone-400">{new Date(item.timestamp).toLocaleTimeString()}</span>
+                      </div>
+                    ))}
+                    {activity.length === 0 && <p className="text-stone-400 text-sm">No recent activity</p>}
                  </div>
                </div>
             </div>
@@ -119,8 +145,27 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, onBack }) 
                  <button className="px-4 py-2 bg-ink text-white rounded-lg text-xs font-semibold">Export CSV</button>
                </div>
              </div>
-             <div className="p-8 text-center text-stone-400 text-sm italic">
-               User management table mock.
+             <div className="overflow-x-auto">
+               <table className="w-full text-sm">
+                 <thead className="bg-stone-50 border-b border-stone-200">
+                   <tr>
+                     <th className="px-6 py-3 text-left font-semibold text-stone-600">Name</th>
+                     <th className="px-6 py-3 text-left font-semibold text-stone-600">Email</th>
+                     <th className="px-6 py-3 text-left font-semibold text-stone-600">Role</th>
+                     <th className="px-6 py-3 text-left font-semibold text-stone-600">Joined</th>
+                   </tr>
+                 </thead>
+                 <tbody>
+                   {adminUsers.map((user) => (
+                     <tr key={user.id} className="border-b border-stone-100 hover:bg-stone-50">
+                       <td className="px-6 py-3">{user.name}</td>
+                       <td className="px-6 py-3">{user.email}</td>
+                       <td className="px-6 py-3"><span className={`px-2 py-1 rounded text-xs font-semibold ${user.is_admin ? 'bg-purple-100 text-purple-700' : 'bg-stone-100 text-stone-700'}`}>{user.is_admin ? 'Admin' : 'User'}</span></td>
+                       <td className="px-6 py-3 text-stone-500 text-xs">{new Date(user.created_at).toLocaleDateString()}</td>
+                     </tr>
+                   ))}
+                 </tbody>
+               </table>
              </div>
            </div>
         )}

@@ -119,5 +119,29 @@ export const api = {
       headers: { 'Authorization': `Bearer ${token}` }
     });
     if (!res.ok) throw new Error('Failed to delete template');
+  },
+
+  async getAdminStats(): Promise<{ totalUsers: number; activeSessions: number; frameworks: number }> {
+    const res = await fetch(`${API_BASE}/api/admin/stats`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    if (!res.ok) throw new Error('Failed to fetch admin stats');
+    return await res.json();
+  },
+
+  async getAdminActivity(): Promise<any[]> {
+    const res = await fetch(`${API_BASE}/api/admin/activity`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    if (!res.ok) throw new Error('Failed to fetch activity');
+    return await res.json();
+  },
+
+  async getAdminUsers(): Promise<any[]> {
+    const res = await fetch(`${API_BASE}/api/admin/users`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    if (!res.ok) throw new Error('Failed to fetch users');
+    return await res.json();
   }
 };

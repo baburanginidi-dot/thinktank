@@ -255,6 +255,87 @@ app.delete('/api/templates/:id', authMiddleware, async (req: any, res: Response)
   }
 });
 
+// Admin Routes (require auth)
+app.get('/api/admin/stats', authMiddleware, async (req: any, res: Response) => {
+  try {
+    // Check if user is admin
+    const userResult = await pool.query('SELECT is_admin FROM users WHERE id = $1', [req.user?.id]);
+    if (userResult.rows.length === 0 || !userResult.rows[0].is_admin) {
+      return res.status(403).json({ error: 'Access denied' });
+    }
+
+    const totalUsers = await pool.query('SELECT COUNT(*) as count FROM users');
+    const activeSessions = await pool.query('SELECT COUNT(*) as count FROM sessions WHERE last_modified > NOW() - INTERVAL \'24 hours\'');
+    const totalFrameworks = 24; // Static for now
+
+    res.json({
+      totalUsers: totalUsers.rows[0].count,
+      activeSessions: activeSessions.rows[0].count,
+      frameworks: totalFrameworks
+    });
+  } catch (error) {
+    console.error('Admin stats error:', error);
+    res.status(500).json({ error: 'Failed to fetch stats' });
+  }
+});
+
+app.get('/api/admin/activity', authMiddleware, async (req: any, res: Response) => {
+  try {
+    // Check if user is admin
+    const userResult = await pool.query('SELECT is_admin FROM users WHERE id = $1', [req.user?.id]);
+    if (userResult.rows.length === 0 || !userResult.rows[0].is_admin) {
+      return res.status(403).json({ error: 'Access denied' });
+    }
+
+    const recentUsers = await pool.query(
+      'SELECT email, name, created_at FROM users ORDER BY created_at DESC LIMIT 5'
+    );
+    const recentSessions = await pool.query(
+      'SELECT s.id, s.problem_text, s.last_modified FROM sessions ORDER BY last_modified DESC LIMIT 5'
+    );
+
+    const activity = [];
+    for (const user of recentUsers.rows) {
+      activity.push({
+        type: 'user_registration',
+        message: `New user: ${user.email}`,
+        timestamp: user.created_at
+      });
+    }
+    for (const session of recentSessions.rows) {
+      activity.push({
+        type: 'session_created',
+        message: `Session: ${session.problem_text || 'Untitled'}`,
+        timestamp: session.last_modified
+      });
+    }
+
+    activity.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+    
+    res.json(activity.slice(0, 10));
+  } catch (error) {
+    console.error('Admin activity error:', error);
+    res.status(500).json({ error: 'Failed to fetch activity' });
+  }
+});
+
+app.get('/api/admin/users', authMiddleware, async (req: any, res: Response) => {
+  try {
+    const userResult = await pool.query('SELECT is_admin FROM users WHERE id = $1', [req.user?.id]);
+    if (userResult.rows.length === 0 || !userResult.rows[0].is_admin) {
+      return res.status(403).json({ error: 'Access denied' });
+    }
+
+    const users = await pool.query(
+      'SELECT id, name, email, is_admin, created_at FROM users ORDER BY created_at DESC LIMIT 50'
+    );
+    res.json(users.rows);
+  } catch (error) {
+    console.error('Admin users error:', error);
+    res.status(500).json({ error: 'Failed to fetch users' });
+  }
+});
+
 // Health check
 app.get('/api/health', (req: Request, res: Response) => {
   res.json({ status: 'ok' });
