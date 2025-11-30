@@ -1,20 +1,7 @@
 import { User, SavedSession, SectionTemplate, Framework, CanvasSection, Viewport, ProblemStatement } from '../types';
 
-// Get the backend URL based on the environment
-const getAPIBase = () => {
-  // In development, backend runs on :3000
-  // In production, it's the same domain with /api prefix
-  if (typeof window !== 'undefined') {
-    const isDev = window.location.hostname === 'localhost' || window.location.hostname.includes('.replit.dev');
-    if (isDev && window.location.port === '5000') {
-      // Replace port 5000 with 3000 for API calls
-      return `https://${window.location.hostname}:3000`;
-    }
-  }
-  return process.env.REACT_APP_API_URL || '';
-};
-
-const API_BASE = getAPIBase();
+// Use relative paths - Vite will proxy /api to localhost:3000
+const API_BASE = '';
 let token: string | null = localStorage.getItem('auth_token');
 
 export const api = {
