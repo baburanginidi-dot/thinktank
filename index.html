@@ -52,23 +52,19 @@
     </script>
     <style>
       body {
-        background-color: #111; /* Dark background to highlight the device frame */
+        background-color: #F9F9F7;
         color: #1A1A1A;
         font-family: 'Inter', sans-serif;
-        overscroll-behavior: none;
-        display: flex;
-        justify-content: center;
+        overscroll-behavior-y: none;
         min-height: 100vh;
         margin: 0;
       }
       #root {
         width: 100%;
-        max-width: 375px; /* STRICT MOBILE WIDTH */
-        background-color: #F9F9F7;
         min-height: 100vh;
-        box-shadow: 0 0 40px rgba(0,0,0,0.5);
-        overflow-x: hidden;
         position: relative;
+        display: flex;
+        flex-direction: column;
       }
       h1, h2, h3, h4, h5, h6 {
         font-family: 'Playfair Display', serif;

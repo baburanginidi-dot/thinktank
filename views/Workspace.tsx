@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState, useRef } from 'react';
 import { Framework, ProblemStatement, CanvasSection, CanvasNote, SectionTemplate, Viewport } from '../types';
 import { initializeBoard, generateSectionIdeas } from '../services/geminiService';
@@ -29,13 +28,6 @@ const getSectionStyle = (frameworkLayout: string, index: number, title: string) 
   const titleLower = title.toLowerCase();
   
   if (frameworkLayout === 'six_hats') {
-    if (titleLower.includes('white') || titleLower.includes('data')) return { borderColor: 'border-stone-300', headerBg: 'bg-stone-50/90', titleColor: 'text-stone-700', badge: 'bg-stone-200 text-stone-600' };
-    if (titleLower.includes('red') || titleLower.includes('emotion')) return { borderColor: 'border-red-200', headerBg: 'bg-red-50/90', titleColor: 'text-red-800', badge: 'bg-red-200 text-red-700' };
-    if (titleLower.includes('black') || titleLower.includes('caution')) return { borderColor: 'border-stone-700', headerBg: 'bg-stone-800/90', titleColor: 'text-white', badge: 'bg-stone-600 text-stone-100' };
-    if (titleLower.includes('yellow') || titleLower.includes('positive')) return { borderColor: 'border-yellow-300', headerBg: 'bg-yellow-50/90', titleColor: 'text-yellow-800', badge: 'bg-yellow-200 text-yellow-800' };
-    if (titleLower.includes('green') || titleLower.includes('create')) return { borderColor: 'border-green-300', headerBg: 'bg-green-50/90', titleColor: 'text-green-800', badge: 'bg-green-200 text-green-800' };
-    if (titleLower.includes('blue') || titleLower.includes('process')) return { borderColor: 'border-blue-300', headerBg: 'bg-blue-50/90', titleColor: 'text-blue-800', badge: 'bg-blue-200 text-blue-800' };
-    
     const map = [
        { borderColor: 'border-stone-300', headerBg: 'bg-stone-50/90', titleColor: 'text-stone-700', badge: 'bg-stone-200 text-stone-600' }, 
        { borderColor: 'border-red-200', headerBg: 'bg-red-50/90', titleColor: 'text-red-800', badge: 'bg-red-200 text-red-700' }, 
@@ -78,10 +70,20 @@ export const Workspace: React.FC<WorkspaceProps> = ({
   const [showTemplatesMenu, setShowTemplatesMenu] = useState(false);
   const [dragOverSectionId, setDragOverSectionId] = useState<string | null>(null);
   
+  // Responsive State
+  const [isMobile, setIsMobile] = useState(false);
+  
   const [transform, setTransform] = useState<Transform>(initialViewport || { x: 0, y: 0, scale: 1 });
   const [isDragging, setIsDragging] = useState(false);
   const lastMousePos = useRef<{ x: number, y: number } | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   useEffect(() => {
     const timeoutId = setTimeout(() => {
@@ -96,8 +98,7 @@ export const Workspace: React.FC<WorkspaceProps> = ({
     const init = async () => {
       if (!isInitializing) {
          if (!initialViewport) {
-            // Force mobile defaults
-            setTransform({ x: 20, y: 80, scale: 0.8 });
+            setTransform(isMobile ? { x: 0, y: 0, scale: 1 } : { x: 40, y: 40, scale: 1 });
          }
         return;
       }
@@ -106,7 +107,7 @@ export const Workspace: React.FC<WorkspaceProps> = ({
         const initialSections = await initializeBoard(problem.text, framework);
         setSections(initialSections);
         addToast("Workspace generated successfully", 'success');
-        setTransform({ x: 20, y: 80, scale: 0.8 });
+        setTransform(isMobile ? { x: 0, y: 0, scale: 1 } : { x: 40, y: 40, scale: 1 });
       } catch (error) {
         addToast("Failed to generate workspace. Please try again.", 'error');
       } finally {
@@ -117,16 +118,22 @@ export const Workspace: React.FC<WorkspaceProps> = ({
   }, [problem.text, framework]);
 
   const handleWheel = (e: React.WheelEvent) => {
-    if (e.ctrlKey || e.metaKey) e.preventDefault();
-    const zoomSensitivity = 0.001;
-    const delta = -e.deltaY * zoomSensitivity;
-    const newScale = Math.min(Math.max(0.2, transform.scale + delta), 3);
+    if (isMobile) return; // Native scroll on mobile
     
-    // Simple zoom to center for mobile
-    setTransform(prev => ({ ...prev, scale: newScale }));
+    if (e.ctrlKey || e.metaKey) {
+      e.preventDefault();
+      const zoomSensitivity = 0.001;
+      const delta = -e.deltaY * zoomSensitivity;
+      const newScale = Math.min(Math.max(0.2, transform.scale + delta), 3);
+      setTransform(prev => ({ ...prev, scale: newScale }));
+    } else {
+       // Pan with scrollwheel on desktop if not zooming
+       setTransform(prev => ({ ...prev, x: prev.x - e.deltaX, y: prev.y - e.deltaY }));
+    }
   };
 
   const handleMouseDown = (e: React.MouseEvent) => {
+    if (isMobile) return;
     if (e.button === 0 || e.button === 1) {
       setIsDragging(true);
       lastMousePos.current = { x: e.clientX, y: e.clientY };
@@ -135,6 +142,7 @@ export const Workspace: React.FC<WorkspaceProps> = ({
   };
 
   const handleMouseMove = (e: React.MouseEvent) => {
+    if (isMobile) return;
     if (isDragging && lastMousePos.current) {
       const deltaX = e.clientX - lastMousePos.current.x;
       const deltaY = e.clientY - lastMousePos.current.y;
@@ -146,7 +154,7 @@ export const Workspace: React.FC<WorkspaceProps> = ({
   const handleMouseUp = () => { setIsDragging(false); lastMousePos.current = null; };
   const handleMouseLeave = () => { setIsDragging(false); lastMousePos.current = null; };
 
-  const resetView = () => setTransform({ x: 20, y: 80, scale: 0.8 });
+  const resetView = () => setTransform(isMobile ? { x: 0, y: 0, scale: 1 } : { x: 40, y: 40, scale: 1 });
   
   const handleManualSave = () => { onSaveState(sections, transform); addToast("Layout saved", 'success'); };
 
@@ -156,7 +164,7 @@ export const Workspace: React.FC<WorkspaceProps> = ({
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `think-tank-mobile-${Date.now()}.json`;
+    a.download = `think-tank-${Date.now()}.json`;
     a.click();
     URL.revokeObjectURL(url);
     addToast("Exported", 'success');
@@ -165,18 +173,6 @@ export const Workspace: React.FC<WorkspaceProps> = ({
   const triggerSaveTemplate = (section: CanvasSection) => {
     const name = window.prompt("Template name:", section.title);
     if (name) onSaveTemplate(section, name);
-  };
-
-  const handleAddTemplateToCanvas = (template: SectionTemplate) => {
-    const newSection: CanvasSection = {
-      id: Math.random().toString(36).substr(2, 9),
-      title: template.data.title,
-      description: template.data.description,
-      notes: template.data.notes.map(n => ({ id: Math.random().toString(36).substr(2, 9), content: n.content, color: n.color, isAiGenerated: false }))
-    };
-    setSections(prev => [...prev, newSection]);
-    setShowTemplatesMenu(false);
-    addToast("Template added", 'success');
   };
 
   const handleAddNote = (sectionId: string) => {
@@ -237,7 +233,8 @@ export const Workspace: React.FC<WorkspaceProps> = ({
     return (
       <div 
         key={section.id} 
-        className={`w-[320px] flex flex-col flex-shrink-0 bg-white/40 border rounded-2xl shadow-xl backdrop-blur-sm transition-all duration-300 ${style.borderColor} ${isDragTarget ? 'ring-2 ring-indigo-500 scale-[1.02]' : ''}`}
+        className={`flex-shrink-0 bg-white/40 border rounded-2xl shadow-xl backdrop-blur-sm transition-all duration-300 ${style.borderColor} ${isDragTarget ? 'ring-2 ring-indigo-500 scale-[1.02]' : ''}`}
+        style={{ width: isMobile ? '100%' : '350px' }}
         onMouseDown={(e) => e.stopPropagation()}
       >
         <div className={`p-5 border-b ${style.borderColor} ${style.headerBg} backdrop-blur-md rounded-t-2xl relative group/header`}>
@@ -256,7 +253,7 @@ export const Workspace: React.FC<WorkspaceProps> = ({
         </div>
 
         <div 
-          className="flex-1 min-h-[250px] max-h-[500px] overflow-y-auto p-4 space-y-4 custom-scrollbar bg-stone-50/20"
+          className="flex-1 min-h-[200px] max-h-[500px] overflow-y-auto p-4 space-y-4 custom-scrollbar bg-stone-50/20"
           onDragOver={(e) => handleDragOver(e, section.id)}
           onDragLeave={handleDragLeave}
           onDrop={(e) => handleDrop(e, section.id)}
@@ -285,9 +282,33 @@ export const Workspace: React.FC<WorkspaceProps> = ({
   };
 
   const renderBoardLayout = () => {
-    // FORCE LINEAR STACKING FOR MOBILE CANVAS
+    // DESKTOP: Render as Grid/Canvas
+    if (!isMobile) {
+      if (framework.layout === 'matrix_2x2') {
+         return (
+            <div className="grid grid-cols-2 gap-8 p-10">
+               {sections.map((s, i) => renderSection(s, i))}
+            </div>
+         );
+      }
+      if (framework.layout === 'six_hats') {
+         return (
+            <div className="grid grid-cols-3 gap-6 p-10">
+               {sections.map((s, i) => renderSection(s, i))}
+            </div>
+         );
+      }
+      // Linear
+      return (
+         <div className="flex gap-8 p-10">
+            {sections.map((s, i) => renderSection(s, i))}
+         </div>
+      );
+    }
+
+    // MOBILE: Vertical Stack
     return (
-      <div className="flex flex-col gap-6 p-4">
+      <div className="flex flex-col gap-6 p-4 w-full">
         {sections.map((s, i) => renderSection(s, i))}
       </div>
     );
@@ -305,34 +326,45 @@ export const Workspace: React.FC<WorkspaceProps> = ({
   return (
     <div className="flex flex-col h-[calc(100vh-65px)] bg-[#F4F4F4] overflow-hidden relative select-none">
       
-      {/* Mobile Toolbar */}
-      <div className="absolute top-4 left-4 right-4 z-50 animate-fade-in-up">
-        <div className="bg-white/90 backdrop-blur-md shadow-xl border border-stone-200/50 rounded-xl p-2 flex items-center justify-between gap-1 overflow-x-auto custom-scrollbar">
+      {/* Floating Toolbar */}
+      <div className={`absolute top-4 left-4 right-4 md:left-1/2 md:-translate-x-1/2 md:w-auto z-50 animate-fade-in-up flex justify-center`}>
+        <div className="bg-white/90 backdrop-blur-md shadow-xl border border-stone-200/50 rounded-xl p-2 flex items-center gap-1 overflow-x-auto custom-scrollbar max-w-full">
           
           <button onClick={onBack} className="p-2.5 rounded-full text-stone-500 hover:text-ink"><ArrowLeft size={20} /></button>
-          <div className="w-px h-6 bg-stone-200"></div>
+          <div className="w-px h-6 bg-stone-200 mx-1"></div>
           
-          <button onClick={handleManualSave} className="p-2.5 rounded-full text-stone-500"><Save size={20} /></button>
-          <button onClick={resetView} className="p-2.5 rounded-full text-stone-500"><Move size={20} /></button>
-          <button onClick={() => setTransform(t => ({...t, scale: Math.max(0.2, t.scale - 0.2)}))} className="p-2.5 rounded-full text-stone-500"><ZoomOut size={20} /></button>
-          <button onClick={() => setTransform(t => ({...t, scale: Math.min(3, t.scale + 0.2)}))} className="p-2.5 rounded-full text-stone-500"><ZoomIn size={20} /></button>
+          <button onClick={handleManualSave} className="p-2.5 rounded-full text-stone-500 hover:text-ink" title="Save Layout"><Save size={20} /></button>
           
-          <div className="w-px h-6 bg-stone-200"></div>
-          <button onClick={handleExport} className="p-2.5 rounded-full text-stone-500"><Download size={20} /></button>
+          {!isMobile && (
+            <>
+               <button onClick={resetView} className="p-2.5 rounded-full text-stone-500 hover:text-ink" title="Reset View"><Move size={20} /></button>
+               <button onClick={() => setTransform(t => ({...t, scale: Math.max(0.2, t.scale - 0.2)}))} className="p-2.5 rounded-full text-stone-500 hover:text-ink"><ZoomOut size={20} /></button>
+               <button onClick={() => setTransform(t => ({...t, scale: Math.min(3, t.scale + 0.2)}))} className="p-2.5 rounded-full text-stone-500 hover:text-ink"><ZoomIn size={20} /></button>
+            </>
+          )}
+          
+          <div className="w-px h-6 bg-stone-200 mx-1"></div>
+          <button onClick={handleExport} className="p-2.5 rounded-full text-stone-500 hover:text-ink" title="Export JSON"><Download size={20} /></button>
         </div>
       </div>
       
+      {/* Interaction Layer */}
       <div 
         ref={containerRef}
-        className="w-full h-full cursor-grab active:cursor-grabbing overflow-hidden relative touch-none"
+        className={`w-full h-full ${!isMobile ? 'cursor-grab active:cursor-grabbing' : 'overflow-y-auto'}`}
         onWheel={handleWheel}
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
         onMouseLeave={handleMouseLeave}
       >
-        <div className="absolute inset-0 pointer-events-none opacity-20" style={{ backgroundImage: 'radial-gradient(#78716C 1.5px, transparent 1.5px)', backgroundSize: `${24 * transform.scale}px ${24 * transform.scale}px`, backgroundPosition: `${transform.x}px ${transform.y}px` }} />
-        <div className="absolute origin-top-left transition-transform duration-75" style={{ transform: `translate(${transform.x}px, ${transform.y}px) scale(${transform.scale})` }}>
+        {/* Background Grid (Desktop Only) */}
+        {!isMobile && (
+          <div className="absolute inset-0 pointer-events-none opacity-20" style={{ backgroundImage: 'radial-gradient(#78716C 1.5px, transparent 1.5px)', backgroundSize: `${24 * transform.scale}px ${24 * transform.scale}px`, backgroundPosition: `${transform.x}px ${transform.y}px` }} />
+        )}
+        
+        {/* Content Layer */}
+        <div className={`${!isMobile ? 'absolute origin-top-left transition-transform duration-75' : 'w-full pb-20'}`} style={!isMobile ? { transform: `translate(${transform.x}px, ${transform.y}px) scale(${transform.scale})` } : {}}>
           {renderBoardLayout()}
         </div>
       </div>
