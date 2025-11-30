@@ -1,156 +1,107 @@
+
 import React, { useState, useEffect } from 'react';
 import { ArrowRight } from 'lucide-react';
 import { Button } from '../components/Button';
 
-/**
- * Props for the Home view.
- */
 interface HomeProps {
-  /** Callback to submit the problem statement. */
   onSubmit: (problem: string) => void;
-  /** Indicates if the submission is being processed. */
   isLoading: boolean;
-  /** Optional initial value for the input field. */
   initialInput?: string;
 }
 
-/**
- * Examples to display in the typewriter effect placeholder.
- */
 const PLACEHOLDER_EXAMPLES = [
-  "Describe your problem... (e.g., 'User retention dropped by 15%')",
-  "Technical: 'How do we migrate a legacy monolith to microservices without downtime?'",
-  "Strategy: 'Should we prioritize Enterprise sales or Product-Led Growth?'",
-  "Team: 'My engineering lead and product manager have conflicting visions.'",
-  "Personal: 'I feel stuck in my career and fear making the wrong move.'",
-  "Product: 'Customers love our free tier but aren't upgrading to paid.'"
+  "Describe your problem...",
+  "Technical migration strategy...",
+  "Enterprise sales vs PLG...",
+  "Team conflict resolution...",
+  "Career pivot anxiety..."
 ];
 
-/**
- * The Home view component.
- * Acts as the main landing page where users enter their problem statement.
- * Features a typewriter effect for the placeholder text.
- *
- * @param {HomeProps} props - The props for the view.
- * @returns {JSX.Element} The rendered Home view.
- */
 export const Home: React.FC<HomeProps> = ({ onSubmit, isLoading, initialInput }) => {
   const [input, setInput] = useState(initialInput || '');
   const [isFocused, setIsFocused] = useState(false);
 
-  // Typewriter Effect State
+  // Typewriter Effect
   const [placeholder, setPlaceholder] = useState('');
   const [phraseIndex, setPhraseIndex] = useState(0);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [typingSpeed, setTypingSpeed] = useState(50);
 
   useEffect(() => {
-    // If user has typed something, stop animating to save resources/distraction
     if (input.length > 0) return;
-
+    const currentPhrase = PLACEHOLDER_EXAMPLES[phraseIndex];
+    
     const handleType = () => {
-      const currentPhrase = PLACEHOLDER_EXAMPLES[phraseIndex];
-      
       if (isDeleting) {
         setPlaceholder(prev => prev.substring(0, prev.length - 1));
-        setTypingSpeed(30); // Deleting is faster
       } else {
         setPlaceholder(currentPhrase.substring(0, placeholder.length + 1));
-        setTypingSpeed(50); // Typing speed
       }
 
-      // Logic for switching phases
       if (!isDeleting && placeholder === currentPhrase) {
-        // Finished typing, pause before deleting
-        setTimeout(() => setIsDeleting(true), 2000); 
+        setTimeout(() => setIsDeleting(true), 1500); 
       } else if (isDeleting && placeholder === '') {
-        // Finished deleting, move to next phrase
         setIsDeleting(false);
         setPhraseIndex((prev) => (prev + 1) % PLACEHOLDER_EXAMPLES.length);
       }
     };
 
-    const timer = setTimeout(handleType, typingSpeed);
+    const timer = setTimeout(handleType, isDeleting ? 30 : 60);
     return () => clearTimeout(timer);
   }, [placeholder, isDeleting, phraseIndex, input]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (input.trim()) {
-      onSubmit(input);
-    }
+    if (input.trim()) onSubmit(input);
   };
 
   return (
-    <main className="flex flex-col items-center w-full min-h-[calc(100vh-65px)] md:min-h-[85vh] px-4 md:px-8 pt-6 md:pt-20 pb-6 max-w-[420px] md:max-w-4xl mx-auto md:justify-center transition-all duration-500">
+    <main className="flex flex-col items-center w-full min-h-[calc(100vh-60px)] px-4 pt-6 pb-6 transition-all duration-500 overflow-x-hidden">
       
       {/* Content Section */}
-      <div className="w-full text-center flex flex-col justify-center flex-1 md:flex-none space-y-4 md:space-y-6 mb-8 animate-fade-in-up">
+      <div className="w-full text-center flex flex-col justify-center flex-1 space-y-4 mb-6 animate-fade-in-up">
         
-        {/* Mobile Layout: Compact Headline */}
-        <h1 className="text-[32px] leading-[1.2] md:text-7xl font-serif font-medium text-ink md:leading-[1.1] tracking-tight">
+        <h1 className="text-4xl font-serif font-medium text-ink leading-[1.15] tracking-tight">
           Structure your chaos.<br />
           <span className="text-stone-400 italic">Solve with science.</span>
         </h1>
         
-        <p className="text-[16px] leading-relaxed md:text-xl text-stone-600 max-w-xl mx-auto font-light">
+        <p className="text-[15px] leading-relaxed text-stone-600 max-w-xs mx-auto font-light px-2">
           Enter a problem statement. We’ll surface the right frameworks to move you from chaos to clarity.
         </p>
       </div>
 
-      {/* Input Section - Natural Flow Bottom Placement */}
-      <form onSubmit={handleSubmit} className="w-full max-w-2xl relative group mt-auto md:mt-12">
-        {/* Desktop Glow Effect */}
-        <div className={`hidden md:block absolute -inset-1 bg-gradient-to-r from-stone-200 to-stone-300 rounded-xl blur opacity-25 transition duration-500 ${isFocused ? 'opacity-75' : 'group-hover:opacity-50'}`}></div>
+      {/* Input Section */}
+      <form onSubmit={handleSubmit} className="w-full mt-auto mb-4">
         
-        <div className="relative flex flex-col md:block">
+        <div className="relative flex flex-col">
           {/* Input Field */}
-          <div className="relative bg-white rounded-xl shadow-sm border border-stone-200 md:border-stone-200 md:shadow-lg overflow-hidden transition-shadow duration-200 focus-within:ring-2 focus-within:ring-stone-800 focus-within:border-transparent">
+          <div className="relative bg-white rounded-xl shadow-sm border border-stone-200 overflow-hidden focus-within:ring-2 focus-within:ring-stone-800 focus-within:border-transparent">
             <textarea
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onFocus={() => setIsFocused(true)}
               onBlur={() => setIsFocused(false)}
               placeholder={input.length > 0 ? '' : placeholder}
-              className="w-full p-4 md:p-6 text-[16px] md:text-lg bg-transparent text-ink placeholder:text-stone-300 focus:outline-none resize-none min-h-[120px] md:min-h-[140px]"
+              className="w-full p-4 text-[16px] bg-transparent text-ink placeholder:text-stone-300 focus:outline-none resize-none min-h-[140px]"
               disabled={isLoading}
-              style={{ fontSize: '16px' }} // Prevents iOS zoom on focus
+              style={{ fontSize: '16px' }}
             />
-            
-            {/* Desktop Button (Inside) */}
-            <div className="hidden md:block absolute bottom-4 right-4">
-               <Button 
-                 type="submit" 
-                 disabled={!input.trim() || isLoading} 
-                 isLoading={isLoading}
-                 className="rounded-md shadow-sm"
-               >
-                 {!isLoading && <span className="mr-2">Analyze</span>}
-                 {!isLoading && <ArrowRight size={16} />}
-               </Button>
-            </div>
           </div>
 
-          {/* Mobile Button (Full Width, Outside) */}
+          {/* Mobile Button (Full Width) */}
           <Button 
             type="submit" 
             disabled={!input.trim() || isLoading} 
             isLoading={isLoading}
-            className="md:hidden w-full mt-4 py-4 rounded-xl text-base font-semibold shadow-md bg-ink text-white active:scale-[0.98] transition-transform"
+            className="w-full mt-4 py-4 rounded-xl text-base font-semibold shadow-md bg-ink text-white active:scale-[0.98] transition-transform"
           >
-            {isLoading ? (
-               'Analyzing...' 
-            ) : (
-              <>
-                Analyze <ArrowRight size={18} className="ml-2" />
-              </>
-            )}
+            {isLoading ? 'Analyzing...' : <>Analyze <ArrowRight size={18} className="ml-2" /></>}
           </Button>
         </div>
       </form>
       
-      {/* Power Strip / Footer */}
-      <div className="mt-8 md:mt-12 flex flex-wrap justify-center items-center gap-3 md:gap-4 text-[11px] md:text-xs text-stone-400 uppercase tracking-widest opacity-80">
+      {/* Footer */}
+      <div className="mt-6 flex justify-center items-center gap-2 text-[10px] text-stone-400 uppercase tracking-widest opacity-80 pb-4">
         <span className="flex items-center gap-1.5">
            <span className="relative flex h-2 w-2">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
@@ -158,8 +109,6 @@ export const Home: React.FC<HomeProps> = ({ onSubmit, isLoading, initialInput })
             </span>
            <span className="bg-clip-text text-transparent bg-gradient-to-r from-indigo-500 to-purple-600 font-bold">Powered by Gemini</span>
         </span>
-        <span className="w-1 h-1 rounded-full bg-stone-300"></span>
-        <span>Scientific Thinking</span>
       </div>
     </main>
   );

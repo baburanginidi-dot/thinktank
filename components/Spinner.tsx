@@ -1,12 +1,5 @@
 import React from 'react';
 
-/**
- * A simple loading spinner component (SVG based).
- *
- * @param {object} props - The component props.
- * @param {string} [props.className] - Optional CSS classes to apply to the spinner.
- * @returns {JSX.Element} The rendered spinner SVG.
- */
 export const Spinner: React.FC<{ className?: string }> = ({ className }) => (
   <svg 
     className={`animate-spin ${className}`} 

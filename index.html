@@ -52,24 +52,35 @@
     </script>
     <style>
       body {
-        background-color: #F9F9F7;
+        background-color: #111; /* Dark background to highlight the device frame */
         color: #1A1A1A;
         font-family: 'Inter', sans-serif;
-        overscroll-behavior: none; /* Prevents bounce/history nav on Mac */
+        overscroll-behavior: none;
+        display: flex;
+        justify-content: center;
+        min-height: 100vh;
+        margin: 0;
+      }
+      #root {
+        width: 100%;
+        max-width: 375px; /* STRICT MOBILE WIDTH */
+        background-color: #F9F9F7;
+        min-height: 100vh;
+        box-shadow: 0 0 40px rgba(0,0,0,0.5);
+        overflow-x: hidden;
+        position: relative;
       }
       h1, h2, h3, h4, h5, h6 {
         font-family: 'Playfair Display', serif;
       }
-      /* Hide scrollbar for Chrome, Safari and Opera */
+      /* Hide scrollbar */
       .custom-scrollbar::-webkit-scrollbar {
         display: none;
       }
-      /* Hide scrollbar for IE, Edge and Firefox */
       .custom-scrollbar {
-        -ms-overflow-style: none;  /* IE and Edge */
-        scrollbar-width: none;  /* Firefox */
+        -ms-overflow-style: none;
+        scrollbar-width: none;
       }
-      
       /* Prevent iOS input zoom */
       input, textarea {
         font-size: 16px !important; 

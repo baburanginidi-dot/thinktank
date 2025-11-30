@@ -19,12 +19,6 @@ const HISTORY_KEY = 'think_tank_history_v1';
 const TEMPLATES_KEY = 'think_tank_templates_v1';
 const USER_KEY = 'think_tank_user_v1';
 
-/**
- * The main application component.
- * Manages global state, routing (view switching), authentication persistence, and data loading.
- *
- * @returns {JSX.Element} The root application component.
- */
 export const App: React.FC = () => {
   // Auth State
   const [user, setUser] = useState<User | null>(null);

@@ -1,25 +1,16 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { CanvasNote, NoteColor } from '../types';
 import { X, Sparkles, Edit2, GripHorizontal } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 
-/**
- * Props for the StickyNote component.
- */
 interface StickyNoteProps {
-  /** The note data object. */
   note: CanvasNote;
-  /** The ID of the section this note belongs to. */
   sectionId: string;
-  /** Callback to update the note content. */
   onUpdate: (id: string, content: string) => void;
-  /** Callback to delete the note. */
   onDelete: (id: string) => void;
 }
 
-/**
- * CSS classes mapping for each note color variant.
- */
 const colorClasses: Record<NoteColor, string> = {
   yellow: 'bg-yellow-100 border-yellow-200 text-yellow-900 selection:bg-yellow-200 placeholder:text-yellow-900/30',
   blue: 'bg-blue-100 border-blue-200 text-blue-900 selection:bg-blue-200 placeholder:text-blue-900/30',
@@ -29,13 +20,6 @@ const colorClasses: Record<NoteColor, string> = {
   white: 'bg-white border-stone-200 text-stone-900 selection:bg-stone-100 placeholder:text-stone-300',
 };
 
-/**
- * A draggable, editable sticky note component.
- * Displays content in Markdown when not editing.
- *
- * @param {StickyNoteProps} props - The props for the sticky note.
- * @returns {JSX.Element} The rendered sticky note.
- */
 export const StickyNote: React.FC<StickyNoteProps> = ({ note, sectionId, onUpdate, onDelete }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
@@ -77,7 +61,7 @@ export const StickyNote: React.FC<StickyNoteProps> = ({ note, sectionId, onUpdat
       
       {/* Drag Handle Visual (Optional, appears on hover) */}
       {!isEditing && (
-        <div className="absolute top-1 left-1/2 -translate-x-1/2 text-black/10 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+        <div className="absolute top-1 left-1/2 -translate-x-1/2 text-black/10 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none hidden md:block">
           <GripHorizontal size={16} />
         </div>
       )}
@@ -89,15 +73,16 @@ export const StickyNote: React.FC<StickyNoteProps> = ({ note, sectionId, onUpdat
         </div>
       )}
 
-      {/* Controls (Hidden unless hovering) */}
-      <div className="absolute top-1 right-1 flex gap-1 opacity-0 group-hover:opacity-100 transition-all z-10">
+      {/* Controls (Hidden on desktop unless hovering, always visible on mobile) */}
+      <div className="absolute top-1 right-1 flex gap-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-all z-10">
         {!isEditing && (
           <button 
             onClick={(e) => {
                e.stopPropagation();
                setIsEditing(true);
             }}
-            className="p-1 text-black/30 hover:text-black/70 rounded hover:bg-black/5"
+            className="p-1 text-black/40 md:text-black/30 hover:text-black/70 rounded hover:bg-black/5"
+            title="Edit"
           >
             <Edit2 size={12} />
           </button>
@@ -107,7 +92,8 @@ export const StickyNote: React.FC<StickyNoteProps> = ({ note, sectionId, onUpdat
             e.stopPropagation();
             onDelete(note.id);
           }}
-          className="p-1 text-black/30 hover:text-red-600 rounded hover:bg-red-50"
+          className="p-1 text-black/40 md:text-black/30 hover:text-red-600 rounded hover:bg-red-50"
+          title="Delete"
         >
           <X size={14} />
         </button>

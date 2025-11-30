@@ -2,25 +2,13 @@ import React from 'react';
 import { Framework } from '../types';
 import { ArrowRight, Layers, Cpu, Brain, Target, Grid2X2, Trello, Grid3X3, ArrowLeft } from 'lucide-react';
 
-/**
- * Props for the FrameworkSelection component.
- */
 interface FrameworkSelectionProps {
-  /** List of suggested frameworks to display. */
   frameworks: Framework[];
-  /** Callback when a framework is selected. */
   onSelect: (framework: Framework) => void;
-  /** Callback to go back to the previous screen. */
   onBack: () => void;
-  /** The original problem text for context. */
   problem: string;
 }
 
-/**
- * Returns the appropriate icon based on the framework category.
- * @param {string} category - The category of the framework.
- * @returns {JSX.Element} The Lucide icon component.
- */
 const getIconForCategory = (category: string) => {
   switch (category) {
     case 'Technical': return <Cpu size={20} />;
@@ -31,11 +19,6 @@ const getIconForCategory = (category: string) => {
   }
 };
 
-/**
- * Returns the appropriate icon based on the framework layout.
- * @param {string} layout - The layout type of the framework.
- * @returns {JSX.Element} The Lucide icon component.
- */
 const getLayoutIcon = (layout: string) => {
   switch(layout) {
     case 'matrix_2x2': return <Grid2X2 size={14} className="mr-1" />;
@@ -44,12 +27,6 @@ const getLayoutIcon = (layout: string) => {
   }
 };
 
-/**
- * View for selecting a framework from a list of AI-suggested options.
- *
- * @param {FrameworkSelectionProps} props - The props for the view.
- * @returns {JSX.Element} The rendered framework selection view.
- */
 export const FrameworkSelection: React.FC<FrameworkSelectionProps> = ({ frameworks, onSelect, onBack, problem }) => {
   return (
     <div className="max-w-6xl mx-auto px-6 py-12 animate-fade-in-up">

@@ -1,27 +1,15 @@
+
 import React from 'react';
 import { Framework } from '../types';
 import { ArrowLeft, ArrowRight, CheckCircle, Brain, Cpu, Layers, Target, Grid2X2, Grid3X3, Trello } from 'lucide-react';
 import { Button } from '../components/Button';
 
-/**
- * Props for the MethodologyDetail view.
- */
 interface MethodologyDetailProps {
-  /** The framework to display details for. */
   framework: Framework;
-  /** Callback to use this framework in a new session. */
   onUseTemplate: (framework: Framework) => void;
-  /** Callback to go back to the previous view. */
   onBack: () => void;
 }
 
-/**
- * The Methodology Detail view.
- * Displays deep dive information about a specific framework, including its steps and usage.
- *
- * @param {MethodologyDetailProps} props - The props for the view.
- * @returns {JSX.Element} The rendered detail view.
- */
 export const MethodologyDetail: React.FC<MethodologyDetailProps> = ({ framework, onUseTemplate, onBack }) => {
   
   const getIconForCategory = (category: string) => {
@@ -43,44 +31,42 @@ export const MethodologyDetail: React.FC<MethodologyDetailProps> = ({ framework,
   };
 
   return (
-    <div className="max-w-5xl mx-auto px-6 py-12 min-h-[85vh] animate-fade-in-up">
+    <div className="w-full px-4 py-6 min-h-[85vh] animate-fade-in-up pb-safe">
       
       {/* Navigation */}
       <button 
         onClick={onBack} 
-        className="group flex items-center text-stone-400 hover:text-ink mb-12 transition-colors"
+        className="group flex items-center text-stone-400 hover:text-ink mb-6 transition-colors p-2 -ml-2"
       >
-        <div className="p-2 rounded-full group-hover:bg-stone-100 transition-colors mr-2">
+        <div className="p-1 rounded-full group-hover:bg-stone-100 transition-colors mr-2">
            <ArrowLeft size={20} className="group-hover:-translate-x-1 transition-transform" />
         </div>
         <span className="font-medium text-sm">Back to Library</span>
       </button>
 
-      {/* Hero Section */}
-      <div className="flex flex-col md:flex-row gap-12 items-start mb-20 border-b border-stone-200 pb-16">
-        <div className="flex-1">
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-stone-100 text-stone-600 text-xs font-bold uppercase tracking-wider mb-6">
+      {/* Stacked Hero Section */}
+      <div className="flex flex-col gap-8 mb-12 border-b border-stone-200 pb-12">
+        <div className="w-full">
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-stone-100 text-stone-600 text-xs font-bold uppercase tracking-wider mb-4">
             {getIconForCategory(framework.category)}
             {framework.category}
           </div>
           
-          <h1 className="text-5xl md:text-6xl font-serif text-ink mb-6 leading-tight">
+          <h1 className="text-3xl font-serif text-ink mb-4 leading-tight">
             {framework.name}
           </h1>
           
-          <p className="text-xl text-stone-600 leading-relaxed font-light mb-8 max-w-2xl">
+          <p className="text-base text-stone-600 leading-relaxed font-light mb-8">
             {framework.description}
           </p>
 
-          <div className="flex items-center gap-4">
-             <Button onClick={() => onUseTemplate(framework)} className="px-8 py-4 text-lg">
-                Use This Template <ArrowRight size={20} className="ml-2" />
-             </Button>
-          </div>
+          <Button onClick={() => onUseTemplate(framework)} className="w-full px-8 py-4 text-base justify-center rounded-xl">
+            Use This Template <ArrowRight size={20} className="ml-2" />
+          </Button>
         </div>
 
-        {/* Sidebar Info */}
-        <div className="w-full md:w-80 bg-stone-50 rounded-2xl p-8 border border-stone-100">
+        {/* Sidebar Info - Full width */}
+        <div className="w-full bg-stone-50 rounded-2xl p-6 border border-stone-100">
            <div className="mb-6">
              <h4 className="text-xs font-bold text-stone-400 uppercase tracking-widest mb-3">Best Used For</h4>
              <p className="text-sm text-stone-800 font-medium italic leading-relaxed">
@@ -99,25 +85,24 @@ export const MethodologyDetail: React.FC<MethodologyDetailProps> = ({ framework,
       </div>
 
       {/* Steps Section */}
-      <div className="max-w-3xl">
-        <h2 className="text-3xl font-serif text-ink mb-8">How it works</h2>
+      <div className="w-full">
+        <h2 className="text-2xl font-serif text-ink mb-6">How it works</h2>
         
-        <div className="space-y-8 relative before:absolute before:inset-0 before:ml-5 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-stone-200 before:to-transparent">
+        <div className="space-y-6 relative before:absolute before:inset-0 before:ml-5 before:-translate-x-px before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-stone-200 before:to-transparent">
           {framework.steps.map((step, idx) => (
-            <div key={idx} className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active">
+            <div key={idx} className="relative flex items-center justify-between group">
               
               {/* Icon / Number */}
-              <div className="flex items-center justify-center w-10 h-10 rounded-full border-4 border-white bg-stone-200 text-stone-500 font-bold text-sm shadow shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 z-10 group-hover:bg-ink group-hover:text-white transition-colors">
+              <div className="flex items-center justify-center w-10 h-10 rounded-full border-4 border-white bg-stone-200 text-stone-500 font-bold text-sm shadow shrink-0 z-10 group-hover:bg-ink group-hover:text-white transition-colors">
                 {idx + 1}
               </div>
               
               {/* Content Card */}
-              <div className="w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] bg-white p-6 rounded-xl border border-stone-100 shadow-sm group-hover:shadow-md transition-shadow">
+              <div className="w-[calc(100%-3.5rem)] ml-auto bg-white p-4 rounded-xl border border-stone-100 shadow-sm">
                 <div className="flex items-center justify-between mb-1">
-                  <h3 className="font-bold text-stone-800 text-lg">{step}</h3>
-                  <CheckCircle size={16} className="text-stone-300" />
+                  <h3 className="font-bold text-stone-800 text-sm">{step}</h3>
                 </div>
-                <p className="text-stone-500 text-sm">
+                <p className="text-stone-500 text-xs">
                    Step {idx + 1} of the {framework.name} process.
                 </p>
               </div>
@@ -126,11 +111,12 @@ export const MethodologyDetail: React.FC<MethodologyDetailProps> = ({ framework,
         </div>
       </div>
 
-      <div className="mt-20 pt-10 border-t border-stone-200 flex justify-between items-center">
+      {/* Bottom CTA */}
+      <div className="mt-12 pt-8 border-t border-stone-200 flex flex-col gap-6 text-center">
         <div className="text-stone-400 text-sm">
-          Ready to apply this framework to your problem?
+          Ready to apply this framework?
         </div>
-        <Button onClick={() => onUseTemplate(framework)} variant="secondary">
+        <Button onClick={() => onUseTemplate(framework)} variant="secondary" className="w-full justify-center py-3">
           Start Session
         </Button>
       </div>

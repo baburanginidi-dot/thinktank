@@ -3,27 +3,13 @@ import { SavedSession } from '../types';
 import { ArrowLeft, Trash2, Clock, ArrowRight, Layout, Calendar } from 'lucide-react';
 import { Button } from '../components/Button';
 
-/**
- * Props for the History view.
- */
 interface HistoryProps {
-  /** List of saved sessions to display. */
   sessions: SavedSession[];
-  /** Callback to open/resume a session. */
   onOpenSession: (session: SavedSession) => void;
-  /** Callback to delete a session. */
   onDeleteSession: (sessionId: string) => void;
-  /** Callback to go back to the previous view. */
   onBack: () => void;
 }
 
-/**
- * History view component.
- * Displays a grid of past problem-solving sessions.
- *
- * @param {HistoryProps} props - The props for the view.
- * @returns {JSX.Element} The rendered history view.
- */
 export const History: React.FC<HistoryProps> = ({ sessions, onOpenSession, onDeleteSession, onBack }) => {
   const sortedSessions = [...sessions].sort((a, b) => b.lastModified - a.lastModified);
 
